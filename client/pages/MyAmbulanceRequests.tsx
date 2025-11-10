@@ -8,9 +8,11 @@ import {
   MapPin,
   AlertTriangle,
   CheckCircle,
+  XCircle,
   RefreshCw,
   Calendar,
   FileText,
+  Hospital,
 } from "lucide-react";
 import {
   Card,
@@ -33,6 +35,11 @@ interface AmbulanceRequest {
   status: string;
   priority: string;
   notes: string;
+  is_read?: number;
+  forwarded_to_hospital_id?: number;
+  hospital_response?: string;
+  hospital_response_notes?: string;
+  hospital_response_date?: string;
   created_at: string;
   assigned_staff_name: string;
   assigned_staff_phone?: string;
