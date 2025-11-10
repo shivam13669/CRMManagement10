@@ -88,7 +88,8 @@ export const handleCreateAmbulanceRequest: RequestHandler = async (
 // Get ambulance requests (for staff and admin)
 export const handleGetAmbulanceRequests: RequestHandler = async (req, res) => {
   try {
-    const { role } = (req as any).user;
+    const { role, userId } = (req as any).user;
+    const { unread_only } = req.query;
 
     if (role !== "staff" && role !== "admin") {
       return res
@@ -99,7 +100,7 @@ export const handleGetAmbulanceRequests: RequestHandler = async (req, res) => {
     let result: any;
 
     try {
-      // Try query including signup lat/lng (newer schema)
+      // Try query including signup lat/lng (newer schema) and new columns
       result = db.exec(`
       SELECT
         ar.id,
@@ -111,6 +112,11 @@ export const handleGetAmbulanceRequests: RequestHandler = async (req, res) => {
         ar.status,
         ar.priority,
         ar.notes,
+        ar.is_read,
+        ar.forwarded_to_hospital_id,
+        ar.hospital_response,
+        ar.customer_state,
+        ar.customer_district,
         ar.created_at,
         u.full_name as patient_name,
         u.email as patient_email,
@@ -128,7 +134,7 @@ export const handleGetAmbulanceRequests: RequestHandler = async (req, res) => {
     `);
     } catch (err) {
       console.warn(
-        "Ambulance query with signup_lat/signup_lng failed, falling back to older query",
+        "Ambulance query with new columns failed, falling back to older query",
         err,
       );
       // Fallback to older query if DB doesn't have the new columns
@@ -170,6 +176,11 @@ export const handleGetAmbulanceRequests: RequestHandler = async (req, res) => {
         });
         return request;
       });
+
+      // Filter by unread if requested
+      if (unread_only === "true") {
+        requests = requests.filter((r) => !r.is_read);
+      }
 
       // Sort by priority manually
       const priorityOrder = { critical: 1, high: 2, normal: 3, low: 4 };
