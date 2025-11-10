@@ -534,6 +534,27 @@ async function runMigrations(): Promise<void> {
       );
     }
 
+    // Migration 6: Add admin_type column to users table
+    try {
+      const usersTableInfo = db.exec("PRAGMA table_info(users)");
+      const hasAdminType = usersTableInfo[0]?.values.some(
+        (row) => row[1] === "admin_type",
+      );
+
+      if (!hasAdminType) {
+        console.log("📝 Adding admin_type column to users table...");
+        db.run(
+          "ALTER TABLE users ADD COLUMN admin_type TEXT DEFAULT 'system' CHECK(admin_type IN ('system', 'state'))",
+        );
+        console.log("✅ admin_type column added successfully");
+      }
+    } catch (error) {
+      console.log(
+        "⚠️ admin_type column migration skipped:",
+        error.message,
+      );
+    }
+
     console.log("🔄 All migrations completed");
   } catch (error) {
     console.error("❌ Error running migrations:", error);
