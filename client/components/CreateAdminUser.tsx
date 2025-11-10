@@ -193,11 +193,27 @@ export function CreateAdminUser({ onSuccess }: CreateAdminUserProps) {
             Create New Admin User
           </CardTitle>
           <CardDescription>
-            Create a new administrator with full system access
+            Create a new administrator user
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Admin Type Selection */}
+            <div>
+              <Label htmlFor="admin_type" className="text-sm font-medium">
+                Admin Type
+              </Label>
+              <Select value={adminType} onValueChange={(value: any) => setAdminType(value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select admin type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="system">System Admin</SelectItem>
+                  <SelectItem value="state">State Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Name Field */}
             <div>
               <Label htmlFor="full_name" className="text-sm font-medium">
