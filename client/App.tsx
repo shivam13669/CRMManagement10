@@ -127,6 +127,7 @@ function App() {
               path="/my-ambulance-requests"
               element={<MyAmbulanceRequests />}
             />
+            <Route path="/track-request" element={<TrackRequest />} />
             <Route path="/medical-reports" element={<MedicalReports />} />
             <Route path="/feedback" element={<Feedback />} />
             <Route path="/notifications" element={<Notifications />} />
