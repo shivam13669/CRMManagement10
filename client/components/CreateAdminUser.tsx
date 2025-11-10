@@ -265,69 +265,73 @@ export function CreateAdminUser({ onSuccess }: CreateAdminUserProps) {
               )}
             </div>
 
-            {/* State Field */}
-            <div>
-              <Label htmlFor="state" className="text-sm font-medium">
-                State
-              </Label>
-              <Select value={formData.state} onValueChange={(value) => {
-                setFormData({ ...formData, state: value, district: "" });
-                if (errors.state) {
-                  setErrors({ ...errors, state: "" });
-                }
-              }}>
-                <SelectTrigger className={errors.state ? "border-red-500" : ""}>
-                  <SelectValue placeholder="Select state" />
-                </SelectTrigger>
-                <SelectContent>
-                  {states.map((state) => (
-                    <SelectItem key={state.name} value={state.name}>
-                      {state.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.state && (
-                <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                  <AlertCircle className="h-4 w-4" />
-                  {errors.state}
-                </p>
-              )}
-            </div>
-
-            {/* District Field */}
-            <div>
-              <Label htmlFor="district" className="text-sm font-medium">
-                District
-              </Label>
-              <Select 
-                value={formData.district} 
-                onValueChange={(value) => {
-                  setFormData({ ...formData, district: value });
-                  if (errors.district) {
-                    setErrors({ ...errors, district: "" });
+            {/* State Field - Only for State Admins */}
+            {adminType === "state" && (
+              <div>
+                <Label htmlFor="state" className="text-sm font-medium">
+                  State
+                </Label>
+                <Select value={formData.state} onValueChange={(value) => {
+                  setFormData({ ...formData, state: value, district: "" });
+                  if (errors.state) {
+                    setErrors({ ...errors, state: "" });
                   }
-                }}
-                disabled={!formData.state}
-              >
-                <SelectTrigger className={errors.district ? "border-red-500" : ""}>
-                  <SelectValue placeholder="Select district" />
-                </SelectTrigger>
-                <SelectContent>
-                  {districts.map((district) => (
-                    <SelectItem key={district} value={district}>
-                      {district}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.district && (
-                <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                  <AlertCircle className="h-4 w-4" />
-                  {errors.district}
-                </p>
-              )}
-            </div>
+                }}>
+                  <SelectTrigger className={errors.state ? "border-red-500" : ""}>
+                    <SelectValue placeholder="Select state" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {states.map((state) => (
+                      <SelectItem key={state.name} value={state.name}>
+                        {state.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.state && (
+                  <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                    <AlertCircle className="h-4 w-4" />
+                    {errors.state}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* District Field - Only for State Admins */}
+            {adminType === "state" && (
+              <div>
+                <Label htmlFor="district" className="text-sm font-medium">
+                  District
+                </Label>
+                <Select
+                  value={formData.district}
+                  onValueChange={(value) => {
+                    setFormData({ ...formData, district: value });
+                    if (errors.district) {
+                      setErrors({ ...errors, district: "" });
+                    }
+                  }}
+                  disabled={!formData.state}
+                >
+                  <SelectTrigger className={errors.district ? "border-red-500" : ""}>
+                    <SelectValue placeholder="Select district" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {districts.map((district) => (
+                      <SelectItem key={district} value={district}>
+                        {district}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.district && (
+                  <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                    <AlertCircle className="h-4 w-4" />
+                    {errors.district}
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Password Field */}
             <div>
