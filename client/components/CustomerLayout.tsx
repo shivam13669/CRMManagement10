@@ -42,6 +42,11 @@ const sidebarItems = [
     label: "My Ambulance Requests",
     path: "/my-ambulance-requests",
   },
+  {
+    icon: Truck,
+    label: "Track Request",
+    path: "/track-request",
+  },
   { icon: MessageSquare, label: "Feedback & Complaints", path: "/feedback" },
   { icon: FileText, label: "Medical Reports", path: "/medical-reports" },
   { icon: CreditCard, label: "Payments", path: "/payments" },
