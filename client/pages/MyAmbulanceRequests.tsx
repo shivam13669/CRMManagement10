@@ -486,33 +486,113 @@ export default function MyAmbulanceRequests() {
                     </>
                   )}
 
-                  {/* Status Progress */}
-                  <div className="mt-4">
-                    <div className="flex items-center space-x-4">
+                  {/* Hospital Response (if available) */}
+                  {request.hospital_response && (
+                    <>
+                      <Separator />
                       <div
-                        className={`flex items-center space-x-2 ${["pending", "assigned", "on_the_way", "completed"].includes(request.status) ? "text-blue-600" : "text-gray-400"}`}
+                        className={`p-3 rounded-lg ${
+                          request.hospital_response === "accepted"
+                            ? "bg-green-50"
+                            : request.hospital_response === "rejected"
+                              ? "bg-red-50"
+                              : "bg-yellow-50"
+                        }`}
                       >
                         <div
-                          className={`w-2 h-2 rounded-full ${request.status === "pending" || request.status === "assigned" || request.status === "on_the_way" || request.status === "completed" ? "bg-blue-600" : "bg-gray-300"}`}
+                          className={`flex items-center space-x-2 mb-2 ${
+                            request.hospital_response === "accepted"
+                              ? "text-green-900"
+                              : request.hospital_response === "rejected"
+                                ? "text-red-900"
+                                : "text-yellow-900"
+                          }`}
+                        >
+                          {request.hospital_response === "accepted" ? (
+                            <CheckCircle className="w-4 h-4" />
+                          ) : request.hospital_response === "rejected" ? (
+                            <XCircle className="w-4 h-4" />
+                          ) : (
+                            <Clock className="w-4 h-4" />
+                          )}
+                          <span className="font-semibold">
+                            Hospital Response:{" "}
+                            <span className="capitalize">
+                              {request.hospital_response}
+                            </span>
+                          </span>
+                        </div>
+                        {request.hospital_response_notes && (
+                          <p
+                            className={`text-sm ${
+                              request.hospital_response === "accepted"
+                                ? "text-green-800"
+                                : request.hospital_response === "rejected"
+                                  ? "text-red-800"
+                                  : "text-yellow-800"
+                            }`}
+                          >
+                            {request.hospital_response_notes}
+                          </p>
+                        )}
+                        {request.hospital_response_date && (
+                          <p
+                            className={`text-xs mt-2 ${
+                              request.hospital_response === "accepted"
+                                ? "text-green-700"
+                                : request.hospital_response === "rejected"
+                                  ? "text-red-700"
+                                  : "text-yellow-700"
+                            }`}
+                          >
+                            {new Date(
+                              request.hospital_response_date,
+                            ).toLocaleString()}
+                          </p>
+                        )}
+                      </div>
+                    </>
+                  )}
+
+                  {/* Status Progress */}
+                  <div className="mt-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div
+                        className={`flex items-center space-x-2 ${["pending", "assigned", "forwarded_to_hospital", "hospital_accepted", "hospital_rejected", "on_the_way", "completed"].includes(request.status) ? "text-blue-600" : "text-gray-400"}`}
+                      >
+                        <div
+                          className={`w-2 h-2 rounded-full ${["pending", "assigned", "forwarded_to_hospital", "hospital_accepted", "hospital_rejected", "on_the_way", "completed"].includes(request.status) ? "bg-blue-600" : "bg-gray-300"}`}
                         ></div>
                         <span className="text-xs font-medium">Requested</span>
                       </div>
+                      <div className="text-gray-300">→</div>
                       <div
-                        className={`flex items-center space-x-2 ${["assigned", "on_the_way", "completed"].includes(request.status) ? "text-blue-600" : "text-gray-400"}`}
+                        className={`flex items-center space-x-2 ${["assigned", "forwarded_to_hospital", "hospital_accepted", "hospital_rejected", "on_the_way", "completed"].includes(request.status) ? "text-blue-600" : "text-gray-400"}`}
                       >
                         <div
-                          className={`w-2 h-2 rounded-full ${request.status === "assigned" || request.status === "on_the_way" || request.status === "completed" ? "bg-blue-600" : "bg-gray-300"}`}
+                          className={`w-2 h-2 rounded-full ${["assigned", "forwarded_to_hospital", "hospital_accepted", "hospital_rejected", "on_the_way", "completed"].includes(request.status) ? "bg-blue-600" : "bg-gray-300"}`}
                         ></div>
                         <span className="text-xs font-medium">Assigned</span>
                       </div>
+                      <div className="text-gray-300">→</div>
+                      <div
+                        className={`flex items-center space-x-2 ${["forwarded_to_hospital", "hospital_accepted", "hospital_rejected", "on_the_way", "completed"].includes(request.status) ? "text-purple-600" : "text-gray-400"}`}
+                      >
+                        <div
+                          className={`w-2 h-2 rounded-full ${["forwarded_to_hospital", "hospital_accepted", "hospital_rejected", "on_the_way", "completed"].includes(request.status) ? "bg-purple-600" : "bg-gray-300"}`}
+                        ></div>
+                        <span className="text-xs font-medium">Hospital</span>
+                      </div>
+                      <div className="text-gray-300">→</div>
                       <div
                         className={`flex items-center space-x-2 ${["on_the_way", "completed"].includes(request.status) ? "text-orange-600" : "text-gray-400"}`}
                       >
                         <div
-                          className={`w-2 h-2 rounded-full ${request.status === "on_the_way" || request.status === "completed" ? "bg-orange-600" : "bg-gray-300"}`}
+                          className={`w-2 h-2 rounded-full ${["on_the_way", "completed"].includes(request.status) ? "bg-orange-600" : "bg-gray-300"}`}
                         ></div>
-                        <span className="text-xs font-medium">On The Way</span>
+                        <span className="text-xs font-medium">En Route</span>
                       </div>
+                      <div className="text-gray-300">→</div>
                       <div
                         className={`flex items-center space-x-2 ${request.status === "completed" ? "text-green-600" : "text-gray-400"}`}
                       >
