@@ -466,21 +466,23 @@ export default function AmbulanceManagement() {
     critical: requests.filter((r) => r.priority === "critical").length,
   };
 
+  const LayoutComponent = currentUser?.admin_type === "state" ? StateAdminLayout : Layout;
+
   if (loading) {
     return (
-      <Layout>
+      <LayoutComponent>
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           <span className="ml-2 text-gray-600">
             Loading ambulance requests...
           </span>
         </div>
-      </Layout>
+      </LayoutComponent>
     );
   }
 
   return (
-    <Layout>
+    <LayoutComponent>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -1111,6 +1113,6 @@ export default function AmbulanceManagement() {
           </DialogContent>
         </Dialog>
       </div>
-    </Layout>
+    </LayoutComponent>
   );
 }
