@@ -445,3 +445,312 @@ export const handleUpdateAmbulanceStatus: RequestHandler = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+// Forward ambulance request to hospital
+export const handleForwardToHospital: RequestHandler = async (req, res) => {
+  try {
+    const { role, userId } = (req as any).user;
+    const { requestId } = req.params;
+    const { hospital_user_id } = req.body;
+
+    if (role !== "admin") {
+      return res
+        .status(403)
+        .json({ error: "Only admins can forward ambulance requests" });
+    }
+
+    if (!hospital_user_id) {
+      return res.status(400).json({ error: "Hospital user ID is required" });
+    }
+
+    // Check if request exists
+    const checkResult = db.exec(
+      `
+      SELECT customer_user_id, customer_state, customer_district
+      FROM ambulance_requests
+      WHERE id = ?
+    `,
+      [requestId],
+    );
+
+    if (checkResult.length === 0 || checkResult[0].values.length === 0) {
+      return res.status(404).json({ error: "Ambulance request not found" });
+    }
+
+    const request = checkResult[0].values[0];
+    const customerUserId = request[0];
+
+    // Verify hospital exists and get hospital info
+    const hospitalResult = db.exec(
+      `
+      SELECT state, district
+      FROM hospitals
+      WHERE user_id = ?
+    `,
+      [hospital_user_id],
+    );
+
+    if (hospitalResult.length === 0 || hospitalResult[0].values.length === 0) {
+      return res.status(404).json({ error: "Hospital not found" });
+    }
+
+    // Forward the request
+    db.run(
+      `
+      UPDATE ambulance_requests
+      SET forwarded_to_hospital_id = ?, status = 'forwarded_to_hospital',
+          is_read = 0, hospital_response = 'pending',
+          updated_at = datetime('now')
+      WHERE id = ?
+    `,
+      [hospital_user_id, requestId],
+    );
+
+    // Create notification for hospital
+    db.run(
+      `
+      INSERT INTO notifications (user_id, type, title, message, related_id, created_at)
+      VALUES (?, 'ambulance', 'New Ambulance Request', 'An ambulance request has been forwarded to you', ?, datetime('now'))
+    `,
+      [hospital_user_id, requestId],
+    );
+
+    // Create notification for customer
+    db.run(
+      `
+      INSERT INTO notifications (user_id, type, title, message, related_id, created_at)
+      VALUES (?, 'ambulance', 'Request Forwarded', 'Your ambulance request has been forwarded to a hospital for processing', ?, datetime('now'))
+    `,
+      [customerUserId, requestId],
+    );
+
+    console.log(
+      `🚑 Ambulance request ${requestId} forwarded to hospital ${hospital_user_id} by admin ${userId}`,
+    );
+
+    res.json({ message: "Request forwarded to hospital successfully" });
+  } catch (error) {
+    console.error("Forward ambulance request error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// Mark ambulance request as read by admin
+export const handleMarkAmbulanceAsRead: RequestHandler = async (
+  req,
+  res,
+) => {
+  try {
+    const { role } = (req as any).user;
+    const { requestId } = req.params;
+
+    if (role !== "admin") {
+      return res.status(403).json({ error: "Only admins can mark requests" });
+    }
+
+    db.run(
+      `
+      UPDATE ambulance_requests
+      SET is_read = 1, updated_at = datetime('now')
+      WHERE id = ?
+    `,
+      [requestId],
+    );
+
+    res.json({ message: "Request marked as read" });
+  } catch (error) {
+    console.error("Mark ambulance as read error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// Get hospitals in same state (for dropdown)
+export const handleGetHospitalsByState: RequestHandler = async (req, res) => {
+  try {
+    const { role } = (req as any).user;
+    const { state } = req.params;
+
+    if (role !== "admin") {
+      return res
+        .status(403)
+        .json({ error: "Only admins can view hospitals" });
+    }
+
+    if (!state) {
+      return res.status(400).json({ error: "State is required" });
+    }
+
+    const result = db.exec(
+      `
+      SELECT h.user_id, u.full_name as hospital_name, h.hospital_name as name,
+             h.address, h.state, h.district, h.number_of_ambulances
+      FROM hospitals h
+      JOIN users u ON h.user_id = u.id
+      WHERE h.state = ? AND h.status = 'active'
+      ORDER BY h.hospital_name
+    `,
+      [state],
+    );
+
+    let hospitals: any[] = [];
+    if (result.length > 0) {
+      const columns = result[0].columns;
+      hospitals = result[0].values.map((row) => {
+        const hospital: any = {};
+        columns.forEach((col, index) => {
+          hospital[col] = row[index];
+        });
+        return hospital;
+      });
+    }
+
+    res.json({ hospitals, total: hospitals.length });
+  } catch (error) {
+    console.error("Get hospitals by state error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// Hospital responds to forwarded request
+export const handleHospitalResponse: RequestHandler = async (req, res) => {
+  try {
+    const { role, userId } = (req as any).user;
+    const { requestId } = req.params;
+    const { response, notes } = req.body;
+
+    if (role !== "hospital") {
+      return res
+        .status(403)
+        .json({ error: "Only hospitals can respond to requests" });
+    }
+
+    if (!["accepted", "rejected"].includes(response)) {
+      return res
+        .status(400)
+        .json({ error: "Response must be accepted or rejected" });
+    }
+
+    // Check if request is forwarded to this hospital
+    const checkResult = db.exec(
+      `
+      SELECT customer_user_id, id
+      FROM ambulance_requests
+      WHERE id = ? AND forwarded_to_hospital_id = ?
+    `,
+      [requestId, userId],
+    );
+
+    if (checkResult.length === 0 || checkResult[0].values.length === 0) {
+      return res.status(404).json({
+        error: "Request not found or not forwarded to your hospital",
+      });
+    }
+
+    const customerUserId = checkResult[0].values[0][0];
+
+    const newStatus =
+      response === "accepted" ? "hospital_accepted" : "hospital_rejected";
+
+    db.run(
+      `
+      UPDATE ambulance_requests
+      SET hospital_response = ?, hospital_response_notes = ?,
+          hospital_response_date = datetime('now'), status = ?,
+          updated_at = datetime('now')
+      WHERE id = ?
+    `,
+      [response, notes || null, newStatus, requestId],
+    );
+
+    // Create notification for customer
+    const message =
+      response === "accepted"
+        ? "Your ambulance request has been accepted by the hospital"
+        : "Your ambulance request has been rejected by the hospital";
+
+    db.run(
+      `
+      INSERT INTO notifications (user_id, type, title, message, related_id, created_at)
+      VALUES (?, 'ambulance', 'Hospital Response', ?, ?, datetime('now'))
+    `,
+      [customerUserId, message, requestId],
+    );
+
+    // Create notification for admin
+    db.run(
+      `
+      INSERT INTO notifications (user_id, type, title, message, related_id, created_at)
+      VALUES (?, 'ambulance', 'Hospital Response', 'Hospital has responded to ambulance request', ?, datetime('now'))
+    `,
+      [userId, requestId],
+    );
+
+    console.log(
+      `🏥 Hospital ${userId} responded ${response} to ambulance request ${requestId}`,
+    );
+
+    res.json({ message: `Request ${response} successfully` });
+  } catch (error) {
+    console.error("Hospital response error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// Get forwarded requests for hospital
+export const handleGetHospitalForwardedRequests: RequestHandler = async (
+  req,
+  res,
+) => {
+  try {
+    const { role, userId } = (req as any).user;
+
+    if (role !== "hospital") {
+      return res
+        .status(403)
+        .json({ error: "Only hospitals can view their forwarded requests" });
+    }
+
+    const result = db.exec(
+      `
+      SELECT
+        ar.id,
+        ar.pickup_address,
+        ar.emergency_type,
+        ar.customer_condition,
+        ar.contact_number,
+        ar.status,
+        ar.priority,
+        ar.hospital_response,
+        ar.hospital_response_notes,
+        ar.hospital_response_date,
+        ar.created_at,
+        ar.updated_at,
+        u.full_name as patient_name,
+        u.email as patient_email,
+        u.phone as patient_phone
+      FROM ambulance_requests ar
+      JOIN users u ON ar.customer_user_id = u.id
+      WHERE ar.forwarded_to_hospital_id = ?
+      ORDER BY ar.created_at DESC
+    `,
+      [userId],
+    );
+
+    let requests: any[] = [];
+    if (result.length > 0) {
+      const columns = result[0].columns;
+      requests = result[0].values.map((row) => {
+        const request: any = {};
+        columns.forEach((col, index) => {
+          request[col] = row[index];
+        });
+        return request;
+      });
+    }
+
+    res.json({ requests, total: requests.length });
+  } catch (error) {
+    console.error("Get hospital forwarded requests error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
