@@ -126,6 +126,24 @@ export default function MyAmbulanceRequests() {
             Assigned
           </Badge>
         );
+      case "forwarded_to_hospital":
+        return (
+          <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+            Forwarded to Hospital
+          </Badge>
+        );
+      case "hospital_accepted":
+        return (
+          <Badge variant="secondary" className="bg-green-100 text-green-800">
+            Hospital Accepted
+          </Badge>
+        );
+      case "hospital_rejected":
+        return (
+          <Badge variant="secondary" className="bg-red-100 text-red-800">
+            Hospital Rejected
+          </Badge>
+        );
       case "on_the_way":
         return (
           <Badge variant="secondary" className="bg-orange-100 text-orange-800">
