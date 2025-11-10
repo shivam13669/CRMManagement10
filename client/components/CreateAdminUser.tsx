@@ -70,12 +70,14 @@ export function CreateAdminUser({ onSuccess }: CreateAdminUserProps) {
       newErrors.confirmPassword = "Passwords do not match";
     }
 
-    if (!formData.state) {
-      newErrors.state = "State is required";
-    }
+    if (adminType === "state") {
+      if (!formData.state) {
+        newErrors.state = "State is required";
+      }
 
-    if (!formData.district) {
-      newErrors.district = "District is required";
+      if (!formData.district) {
+        newErrors.district = "District is required";
+      }
     }
 
     setErrors(newErrors);
