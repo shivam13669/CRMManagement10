@@ -679,8 +679,8 @@ export async function createUser(user: User): Promise<number> {
     // Use db.run for INSERT statements
     db.run(
       `
-      INSERT INTO users (username, email, password, role, full_name, phone, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+      INSERT INTO users (username, email, password, role, full_name, phone, admin_type, state, district, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
     `,
       [
         user.username,
@@ -689,6 +689,9 @@ export async function createUser(user: User): Promise<number> {
         user.role,
         user.full_name,
         user.phone || null,
+        user.admin_type || "system",
+        user.state || null,
+        user.district || null,
       ],
     );
 
