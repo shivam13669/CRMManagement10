@@ -579,6 +579,9 @@ export interface User {
   role: "admin" | "doctor" | "customer" | "staff";
   full_name: string;
   phone?: string;
+  admin_type?: "system" | "state";
+  state?: string;
+  district?: string;
   created_at?: string;
 }
 
