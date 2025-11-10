@@ -264,28 +264,22 @@ export default function SettingsPage() {
 
           {/* System Settings */}
           <TabsContent value="system" className="space-y-6">
-            {currentUser?.role === "admin" ? (
-              <>
-                <CreateAdminUser />
-              </>
-            ) : (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Database className="h-5 w-5" />
-                    System Configuration
-                  </CardTitle>
-                  <CardDescription>
-                    System-wide settings and configuration options
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-sm text-gray-500 text-center py-8">
-                    System settings are only available for administrators.
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Database className="h-5 w-5" />
+                  System Configuration
+                </CardTitle>
+                <CardDescription>
+                  System-wide settings and configuration options
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm text-gray-500 text-center py-8">
+                  System settings are only available for administrators.
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
