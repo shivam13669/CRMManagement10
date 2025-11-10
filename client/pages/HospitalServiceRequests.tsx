@@ -92,12 +92,15 @@ export default function HospitalServiceRequests() {
         return;
       }
 
-      const response = await fetch("/api/ambulance/hospital/forwarded-requests", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+      const response = await fetch(
+        "/api/ambulance/hospital/forwarded-requests",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         },
-      });
+      );
 
       if (response.ok) {
         const data = await response.json();

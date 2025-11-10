@@ -479,15 +479,16 @@ async function runMigrations(): Promise<void> {
       );
 
       if (!hasState) {
-        console.log(
-          "📝 Adding state and district columns to users table...",
-        );
+        console.log("📝 Adding state and district columns to users table...");
         db.run("ALTER TABLE users ADD COLUMN state TEXT");
         db.run("ALTER TABLE users ADD COLUMN district TEXT");
         console.log("✅ State and district columns added successfully");
       }
     } catch (error) {
-      console.log("⚠️ State and district columns migration skipped:", error.message);
+      console.log(
+        "⚠️ State and district columns migration skipped:",
+        error.message,
+      );
     }
 
     // Migration 5: Add ambulance request forwarding columns
@@ -518,16 +519,19 @@ async function runMigrations(): Promise<void> {
         db.run(
           "ALTER TABLE ambulance_requests ADD COLUMN hospital_response_date DATETIME",
         );
-        db.run(
-          "ALTER TABLE ambulance_requests ADD COLUMN customer_state TEXT",
-        );
+        db.run("ALTER TABLE ambulance_requests ADD COLUMN customer_state TEXT");
         db.run(
           "ALTER TABLE ambulance_requests ADD COLUMN customer_district TEXT",
         );
-        console.log("✅ Ambulance request forwarding columns added successfully");
+        console.log(
+          "✅ Ambulance request forwarding columns added successfully",
+        );
       }
     } catch (error) {
-      console.log("⚠️ Ambulance request columns migration skipped:", error.message);
+      console.log(
+        "⚠️ Ambulance request columns migration skipped:",
+        error.message,
+      );
     }
 
     console.log("🔄 All migrations completed");

@@ -547,10 +547,7 @@ export const handleForwardToHospital: RequestHandler = async (req, res) => {
 };
 
 // Mark ambulance request as read by admin
-export const handleMarkAmbulanceAsRead: RequestHandler = async (
-  req,
-  res,
-) => {
+export const handleMarkAmbulanceAsRead: RequestHandler = async (req, res) => {
   try {
     const { role } = (req as any).user;
     const { requestId } = req.params;
@@ -582,9 +579,7 @@ export const handleGetHospitalsByState: RequestHandler = async (req, res) => {
     const { state } = req.params;
 
     if (role !== "admin") {
-      return res
-        .status(403)
-        .json({ error: "Only admins can view hospitals" });
+      return res.status(403).json({ error: "Only admins can view hospitals" });
     }
 
     if (!state) {

@@ -44,7 +44,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../components/ui/tabs";
 import { toast } from "sonner";
 
 interface AmbulanceRequest {
@@ -215,9 +220,7 @@ export default function AmbulanceManagement() {
 
       if (response.ok) {
         setRequests((prev) =>
-          prev.map((r) =>
-            r.id === requestId ? { ...r, is_read: 1 } : r,
-          ),
+          prev.map((r) => (r.id === requestId ? { ...r, is_read: 1 } : r)),
         );
       }
     } catch (error) {
@@ -588,7 +591,9 @@ export default function AmbulanceManagement() {
                   <SelectItem value="all">All Statuses</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="assigned">Assigned</SelectItem>
-                  <SelectItem value="forwarded_to_hospital">Forwarded</SelectItem>
+                  <SelectItem value="forwarded_to_hospital">
+                    Forwarded
+                  </SelectItem>
                   <SelectItem value="hospital_accepted">
                     Hospital Accepted
                   </SelectItem>
@@ -1063,7 +1068,10 @@ export default function AmbulanceManagement() {
               )}
 
               {hospitals.length > 0 && (
-                <Select value={selectedHospital} onValueChange={setSelectedHospital}>
+                <Select
+                  value={selectedHospital}
+                  onValueChange={setSelectedHospital}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select a hospital" />
                   </SelectTrigger>
