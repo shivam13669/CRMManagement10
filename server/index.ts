@@ -31,6 +31,11 @@ import {
   handleGetCustomerAmbulanceRequests,
   handleAssignAmbulanceRequest,
   handleUpdateAmbulanceStatus,
+  handleForwardToHospital,
+  handleMarkAmbulanceAsRead,
+  handleGetHospitalsByState,
+  handleHospitalResponse,
+  handleGetHospitalForwardedRequests,
 } from "./routes/ambulance";
 import {
   handleCreateAppointment,
