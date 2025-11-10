@@ -284,6 +284,11 @@ export default function AmbulanceManagement() {
   useEffect(() => {
     let filtered = requests;
 
+    // Filter by state for state admins
+    if (currentUser?.admin_type === "state" && currentUser?.state) {
+      filtered = filtered.filter((r) => r.customer_state === currentUser.state);
+    }
+
     // Filter by unread/all
     if (activeTab === "unread") {
       filtered = filtered.filter((r) => !r.is_read);
@@ -316,7 +321,7 @@ export default function AmbulanceManagement() {
     }
 
     setFilteredRequests(filtered);
-  }, [requests, searchTerm, statusFilter, priorityFilter, activeTab]);
+  }, [requests, searchTerm, statusFilter, priorityFilter, activeTab, currentUser]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
