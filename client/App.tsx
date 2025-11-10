@@ -166,6 +166,10 @@ function App() {
               path="/hospital-ambulances"
               element={<HospitalAmbulances />}
             />
+            <Route
+              path="/hospital-service-requests"
+              element={<HospitalServiceRequests />}
+            />
             <Route path="/hospital-staff" element={<HospitalStaff />} />
             <Route path="/hospital-inventory" element={<HospitalInventory />} />
             <Route path="/hospital-reports" element={<HospitalReports />} />
