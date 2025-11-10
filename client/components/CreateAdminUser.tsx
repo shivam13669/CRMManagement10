@@ -115,8 +115,9 @@ export function CreateAdminUser({ onSuccess }: CreateAdminUserProps) {
           email: formData.email,
           password: formData.password,
           confirmPassword: formData.confirmPassword,
-          state: formData.state,
-          district: formData.district,
+          admin_type: adminType,
+          state: adminType === "state" ? formData.state : null,
+          district: adminType === "state" ? formData.district : null,
         }),
       });
 
