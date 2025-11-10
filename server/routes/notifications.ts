@@ -277,13 +277,21 @@ function getTimeAgo(dateString: string): string {
   }
 }
 
-// Mark notification as read (optional feature)
+// Mark notification as read
 export const handleMarkNotificationRead: RequestHandler = async (req, res) => {
   try {
+    const { userId } = (req as any).user;
     const { notificationId } = req.params;
 
-    // In a real system, you'd store notification read states in a separate table
-    // For now, we'll just return success
+    db.run(
+      `
+      UPDATE notifications
+      SET is_read = 1
+      WHERE id = ? AND user_id = ?
+    `,
+      [notificationId, userId],
+    );
+
     console.log(`Marking notification ${notificationId} as read`);
 
     res.json({ message: "Notification marked as read" });
@@ -299,8 +307,18 @@ export const handleMarkAllNotificationsRead: RequestHandler = async (
   res,
 ) => {
   try {
-    // In a real system, you'd update the notification read states
-    console.log("Marking all notifications as read");
+    const { userId } = (req as any).user;
+
+    db.run(
+      `
+      UPDATE notifications
+      SET is_read = 1
+      WHERE user_id = ?
+    `,
+      [userId],
+    );
+
+    console.log(`Marking all notifications as read for user ${userId}`);
 
     res.json({ message: "All notifications marked as read" });
   } catch (error) {
