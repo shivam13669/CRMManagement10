@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Layout } from "../components/Layout";
 import { CustomerLayout } from "../components/CustomerLayout";
 import { ChangePassword } from "../components/ChangePassword";
-import { CreateAdminUser } from "../components/CreateAdminUser";
 import {
   Card,
   CardContent,
