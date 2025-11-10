@@ -28,6 +28,7 @@ export function CreateAdminUser({ onSuccess }: CreateAdminUserProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [adminType, setAdminType] = useState<"system" | "state">("state");
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
