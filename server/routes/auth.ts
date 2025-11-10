@@ -654,12 +654,12 @@ export const handleChangePassword: RequestHandler = async (req, res) => {
   }
 };
 
-// Create admin user (admin only)
+// Create admin user (system admin only)
 export const handleCreateAdminUser: RequestHandler = async (req, res) => {
   try {
-    const { role } = (req as any).user;
+    const { role, email: creatorEmail } = (req as any).user;
 
-    // Only admins can create other admins
+    // Only system admins can create other admins
     if (role !== "admin") {
       return res
         .status(403)
@@ -673,6 +673,7 @@ export const handleCreateAdminUser: RequestHandler = async (req, res) => {
       confirmPassword,
       state,
       district,
+      admin_type = "state",
     } = req.body;
 
     // Validate required fields
@@ -682,10 +683,10 @@ export const handleCreateAdminUser: RequestHandler = async (req, res) => {
       });
     }
 
-    // Validate state and district
-    if (!state || !district) {
+    // For state admins, state and district are required
+    if (admin_type === "state" && (!state || !district)) {
       return res.status(400).json({
-        error: "State and District are required",
+        error: "State and District are required for state admins",
       });
     }
 
@@ -711,29 +712,36 @@ export const handleCreateAdminUser: RequestHandler = async (req, res) => {
 
     // Create admin user
     const username = email.split("@")[0];
-    const adminUser: User = {
+    const adminUser: any = {
       username,
       email,
       password,
       role: "admin",
       full_name,
       phone: null,
+      admin_type: admin_type || "state",
+      state: admin_type === "state" ? state : null,
+      district: admin_type === "state" ? district : null,
     };
 
     const userId = await createUser(adminUser);
 
+    const adminTypeLabel = admin_type === "state" ? `State Admin (${state}, ${district})` : "System Admin";
     console.log(
-      `✅ New admin user created: ${email} (ID: ${userId}) by admin ${(req as any).user.email}`,
+      `✅ New ${adminTypeLabel} created: ${email} (ID: ${userId}) by admin ${creatorEmail}`,
     );
 
     res.status(201).json({
-      message: "Admin user created successfully",
+      message: `${adminTypeLabel} created successfully`,
       user: {
         id: userId,
         username,
         email,
         role: "admin",
+        admin_type: admin_type || "state",
         full_name,
+        state: admin_type === "state" ? state : null,
+        district: admin_type === "state" ? district : null,
       },
     });
   } catch (error) {
