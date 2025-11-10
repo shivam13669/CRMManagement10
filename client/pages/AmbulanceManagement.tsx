@@ -89,6 +89,7 @@ interface Hospital {
 }
 
 export default function AmbulanceManagement() {
+  const currentUser = authUtils.getCurrentUser();
   const [requests, setRequests] = useState<AmbulanceRequest[]>([]);
   const [filteredRequests, setFilteredRequests] = useState<AmbulanceRequest[]>(
     [],
