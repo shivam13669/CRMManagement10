@@ -188,9 +188,13 @@ export default function AmbulanceManagement() {
     try {
       setHospitalsLoading(true);
       const token = localStorage.getItem("authToken");
-      if (!token || !state) return;
 
-      const response = await fetch(`/api/hospitals/by-state/${state}`, {
+      // For state admins, use their assigned state; otherwise use the provided state
+      const stateToUse = currentUser?.admin_type === "state" ? currentUser?.state : state;
+
+      if (!token || !stateToUse) return;
+
+      const response = await fetch(`/api/hospitals/by-state/${stateToUse}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
