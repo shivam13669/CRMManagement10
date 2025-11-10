@@ -207,14 +207,22 @@ function createTables(): void {
         emergency_type TEXT NOT NULL,
         customer_condition TEXT,
         contact_number TEXT NOT NULL,
-        status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'assigned', 'on_the_way', 'completed', 'cancelled')),
+        status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'assigned', 'on_the_way', 'completed', 'cancelled', 'forwarded_to_hospital', 'hospital_accepted', 'hospital_rejected')),
         priority TEXT DEFAULT 'normal' CHECK(priority IN ('low', 'normal', 'high', 'critical')),
         assigned_staff_id INTEGER,
         notes TEXT,
+        is_read INTEGER DEFAULT 0,
+        forwarded_to_hospital_id INTEGER,
+        hospital_response TEXT CHECK(hospital_response IN ('pending', 'accepted', 'rejected')),
+        hospital_response_notes TEXT,
+        hospital_response_date DATETIME,
+        customer_state TEXT,
+        customer_district TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (customer_user_id) REFERENCES users (id) ON DELETE CASCADE,
-        FOREIGN KEY (assigned_staff_id) REFERENCES users (id) ON DELETE SET NULL
+        FOREIGN KEY (assigned_staff_id) REFERENCES users (id) ON DELETE SET NULL,
+        FOREIGN KEY (forwarded_to_hospital_id) REFERENCES users (id) ON DELETE SET NULL
       )
     `);
 
