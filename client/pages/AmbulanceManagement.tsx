@@ -16,6 +16,8 @@ import {
   Users,
   Activity,
   X,
+  Send,
+  Hospital,
 } from "lucide-react";
 import {
   Card,
@@ -41,8 +43,9 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "../components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { toast } from "sonner";
 
 interface AmbulanceRequest {
   id: number;
@@ -54,12 +57,28 @@ interface AmbulanceRequest {
   status: string;
   priority: string;
   notes: string;
+  is_read?: number;
+  forwarded_to_hospital_id?: number;
+  hospital_response?: string;
   created_at: string;
   patient_name: string;
   patient_email: string;
   patient_phone: string;
   assigned_staff_name: string;
   assigned_staff_phone?: string;
+  customer_signup_address?: string;
+  customer_signup_lat?: string;
+  customer_signup_lng?: string;
+}
+
+interface Hospital {
+  user_id: number;
+  hospital_name: string;
+  name: string;
+  address: string;
+  state: string;
+  district: string;
+  number_of_ambulances: number;
 }
 
 export default function AmbulanceManagement() {
@@ -75,6 +94,11 @@ export default function AmbulanceManagement() {
   const [selectedRequest, setSelectedRequest] =
     useState<AmbulanceRequest | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [forwardModalOpen, setForwardModalOpen] = useState(false);
+  const [selectedHospital, setSelectedHospital] = useState<string>("");
+  const [hospitals, setHospitals] = useState<Hospital[]>([]);
+  const [hospitalsLoading, setHospitalsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<"all" | "unread">("all");
 
   // Cache for resolved addresses when pickup_address contains lat,lng
   const [resolvedAddresses, setResolvedAddresses] = useState<
@@ -152,6 +176,93 @@ export default function AmbulanceManagement() {
     }
   };
 
+  const fetchHospitalsByState = async (state?: string) => {
+    try {
+      setHospitalsLoading(true);
+      const token = localStorage.getItem("authToken");
+      if (!token || !state) return;
+
+      const response = await fetch(`/api/hospitals/by-state/${state}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setHospitals(data.hospitals || []);
+      }
+    } catch (error) {
+      console.error("Error fetching hospitals:", error);
+    } finally {
+      setHospitalsLoading(false);
+    }
+  };
+
+  const markAsRead = async (requestId: number) => {
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) return;
+
+      const response = await fetch(`/api/ambulance/${requestId}/mark-read`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        setRequests((prev) =>
+          prev.map((r) =>
+            r.id === requestId ? { ...r, is_read: 1 } : r,
+          ),
+        );
+      }
+    } catch (error) {
+      console.error("Error marking as read:", error);
+    }
+  };
+
+  const forwardToHospital = async () => {
+    if (!selectedRequest || !selectedHospital) {
+      toast.error("Please select a hospital");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) return;
+
+      const response = await fetch(
+        `/api/ambulance/${selectedRequest.id}/forward-to-hospital`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            hospital_user_id: parseInt(selectedHospital),
+          }),
+        },
+      );
+
+      if (response.ok) {
+        toast.success("Request forwarded to hospital successfully");
+        setForwardModalOpen(false);
+        setSelectedHospital("");
+        fetchRequests();
+      } else {
+        toast.error("Failed to forward request");
+      }
+    } catch (error) {
+      console.error("Error forwarding request:", error);
+      toast.error("Error forwarding request");
+    }
+  };
+
   useEffect(() => {
     fetchRequests();
 
@@ -163,9 +274,14 @@ export default function AmbulanceManagement() {
     return () => clearInterval(interval);
   }, []);
 
-  // Filter requests based on search term, status, and priority
+  // Filter requests based on search term, status, priority, and tab
   useEffect(() => {
     let filtered = requests;
+
+    // Filter by unread/all
+    if (activeTab === "unread") {
+      filtered = filtered.filter((r) => !r.is_read);
+    }
 
     if (searchTerm) {
       filtered = filtered.filter(
@@ -194,7 +310,7 @@ export default function AmbulanceManagement() {
     }
 
     setFilteredRequests(filtered);
-  }, [requests, searchTerm, statusFilter, priorityFilter]);
+  }, [requests, searchTerm, statusFilter, priorityFilter, activeTab]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -214,6 +330,24 @@ export default function AmbulanceManagement() {
         return (
           <Badge variant="secondary" className="bg-orange-100 text-orange-800">
             On The Way
+          </Badge>
+        );
+      case "forwarded_to_hospital":
+        return (
+          <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+            Forwarded
+          </Badge>
+        );
+      case "hospital_accepted":
+        return (
+          <Badge variant="secondary" className="bg-green-100 text-green-800">
+            Hospital Accepted
+          </Badge>
+        );
+      case "hospital_rejected":
+        return (
+          <Badge variant="secondary" className="bg-red-100 text-red-800">
+            Hospital Rejected
           </Badge>
         );
       case "completed":
@@ -268,6 +402,8 @@ export default function AmbulanceManagement() {
         return <User className="w-4 h-4 text-blue-600" />;
       case "on_the_way":
         return <Truck className="w-4 h-4 text-orange-600" />;
+      case "forwarded_to_hospital":
+        return <Hospital className="w-4 h-4 text-purple-600" />;
       case "completed":
         return <CheckCircle className="w-4 h-4 text-green-600" />;
       default:
@@ -307,9 +443,14 @@ export default function AmbulanceManagement() {
   // Get summary statistics
   const stats = {
     total: requests.length,
+    unread: requests.filter((r) => !r.is_read).length,
     pending: requests.filter((r) => r.status === "pending").length,
     assigned: requests.filter((r) => r.status === "assigned").length,
     onTheWay: requests.filter((r) => r.status === "on_the_way").length,
+    forwarded: requests.filter((r) => r.status === "forwarded_to_hospital")
+      .length,
+    hospitalAccepted: requests.filter((r) => r.status === "hospital_accepted")
+      .length,
     completed: requests.filter((r) => r.status === "completed").length,
     critical: requests.filter((r) => r.priority === "critical").length,
   };
@@ -353,7 +494,7 @@ export default function AmbulanceManagement() {
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center space-x-2">
@@ -362,6 +503,20 @@ export default function AmbulanceManagement() {
                   <p className="text-sm font-medium text-gray-600">Total</p>
                   <p className="text-2xl font-bold text-gray-900">
                     {stats.total}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <Clock className="w-5 h-5 text-blue-600" />
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Unread</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {stats.unread}
                   </p>
                 </div>
               </div>
@@ -385,41 +540,11 @@ export default function AmbulanceManagement() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center space-x-2">
-                <User className="w-5 h-5 text-blue-600" />
+                <Hospital className="w-5 h-5 text-purple-600" />
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Assigned</p>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {stats.assigned}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <Truck className="w-5 h-5 text-orange-600" />
-                <div>
-                  <p className="text-sm font-medium text-gray-600">
-                    On The Way
-                  </p>
-                  <p className="text-2xl font-bold text-orange-600">
-                    {stats.onTheWay}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Completed</p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {stats.completed}
+                  <p className="text-sm font-medium text-gray-600">Forwarded</p>
+                  <p className="text-2xl font-bold text-purple-600">
+                    {stats.forwarded}
                   </p>
                 </div>
               </div>
@@ -463,6 +588,10 @@ export default function AmbulanceManagement() {
                   <SelectItem value="all">All Statuses</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="assigned">Assigned</SelectItem>
+                  <SelectItem value="forwarded_to_hospital">Forwarded</SelectItem>
+                  <SelectItem value="hospital_accepted">
+                    Hospital Accepted
+                  </SelectItem>
                   <SelectItem value="on_the_way">On The Way</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
                   <SelectItem value="cancelled">Cancelled</SelectItem>
@@ -485,102 +614,186 @@ export default function AmbulanceManagement() {
           </CardContent>
         </Card>
 
-        {/* Requests List - Grid of Boxes */}
-        {filteredRequests.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <Truck className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                {requests.length === 0
-                  ? "No Ambulance Requests"
-                  : "No Matching Requests"}
-              </h3>
-              <p className="text-gray-600">
-                {requests.length === 0
-                  ? "No ambulance requests have been submitted yet."
-                  : "No requests match your current filters."}
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredRequests.map((request) => (
-              <div
-                key={request.id}
-                onClick={() => {
-                  setSelectedRequest(request);
-                  setModalOpen(true);
-                  // resolve address when opening details
-                  resolveAddressForRequest(request);
-                }}
-                className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer"
-              >
-                <div className="mb-3">
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-semibold text-gray-900">
-                      Request #{request.id}
-                    </h3>
-                    <div className="flex gap-2">
-                      {getPriorityBadge(request.priority)}
-                      {getStatusBadge(request.status)}
+        {/* Tabs */}
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as "all" | "unread")}
+        >
+          <TabsList>
+            <TabsTrigger value="all">
+              All Requests ({requests.length})
+            </TabsTrigger>
+            <TabsTrigger value="unread">
+              Unread Requests ({stats.unread})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="all" className="mt-6">
+            {filteredRequests.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <Truck className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    No Ambulance Requests
+                  </h3>
+                  <p className="text-gray-600">
+                    No ambulance requests match your current filters.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredRequests.map((request) => (
+                  <div
+                    key={request.id}
+                    onClick={() => {
+                      setSelectedRequest(request);
+                      setModalOpen(true);
+                      resolveAddressForRequest(request);
+                      markAsRead(request.id);
+                    }}
+                    className={`border rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer ${
+                      !request.is_read
+                        ? "bg-blue-50 border-blue-300"
+                        : "bg-white border-gray-200"
+                    }`}
+                  >
+                    <div className="mb-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="font-semibold text-gray-900">
+                          Request #{request.id}
+                        </h3>
+                        <div className="flex gap-2">
+                          {getPriorityBadge(request.priority)}
+                          {getStatusBadge(request.status)}
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        {request.emergency_type}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {getTimeAgo(request.created_at)}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center space-x-2">
+                        <Users className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                        <span className="text-gray-700 truncate">
+                          {request.patient_name}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Phone className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                        <span className="text-gray-700">
+                          {request.contact_number}
+                        </span>
+                      </div>
+
+                      <div className="flex items-start space-x-2">
+                        <MapPin className="w-4 h-4 text-gray-500 flex-shrink-0 mt-0.5" />
+                        <span className="text-gray-600 line-clamp-2">
+                          {latLngRegex.test(request.pickup_address)
+                            ? resolvedAddresses[request.id] ||
+                              request.pickup_address
+                            : request.pickup_address}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                      <p className="text-xs text-gray-500">
+                        {formatDateTime(request.created_at)}
+                      </p>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-600">
-                    {request.emergency_type}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {getTimeAgo(request.created_at)}
-                  </p>
-                </div>
-
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center space-x-2">
-                    <Users className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                    <span className="text-gray-700 truncate">
-                      {request.patient_name}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Phone className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                    <span className="text-gray-700">
-                      {request.contact_number}
-                    </span>
-                  </div>
-
-                  <div className="flex items-start space-x-2">
-                    <MapPin className="w-4 h-4 text-gray-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-600 line-clamp-2">
-                      {latLngRegex.test(request.pickup_address)
-                        ? resolvedAddresses[request.id] ||
-                          request.pickup_address
-                        : request.pickup_address}
-                    </span>
-                    {latLngRegex.test(request.pickup_address) && (
-                      <a
-                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                          request.pickup_address,
-                        )}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="ml-2 text-xs text-blue-600 hover:underline"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        View on Google Maps
-                      </a>
-                    )}
-                  </div>
-                </div>
-
-                <div className="mt-3 pt-3 border-t border-gray-200">
-                  <p className="text-xs text-gray-500">
-                    {formatDateTime(request.created_at)}
-                  </p>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
+            )}
+          </TabsContent>
+
+          <TabsContent value="unread" className="mt-6">
+            {filteredRequests.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <Truck className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    All Requests Read
+                  </h3>
+                  <p className="text-gray-600">
+                    No unread ambulance requests at this time.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredRequests.map((request) => (
+                  <div
+                    key={request.id}
+                    onClick={() => {
+                      setSelectedRequest(request);
+                      setModalOpen(true);
+                      resolveAddressForRequest(request);
+                      markAsRead(request.id);
+                    }}
+                    className="bg-blue-50 border border-blue-300 rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer"
+                  >
+                    <div className="mb-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="font-semibold text-gray-900">
+                          Request #{request.id}
+                        </h3>
+                        <div className="flex gap-2">
+                          {getPriorityBadge(request.priority)}
+                          {getStatusBadge(request.status)}
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        {request.emergency_type}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {getTimeAgo(request.created_at)}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center space-x-2">
+                        <Users className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                        <span className="text-gray-700 truncate">
+                          {request.patient_name}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Phone className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                        <span className="text-gray-700">
+                          {request.contact_number}
+                        </span>
+                      </div>
+
+                      <div className="flex items-start space-x-2">
+                        <MapPin className="w-4 h-4 text-gray-500 flex-shrink-0 mt-0.5" />
+                        <span className="text-gray-600 line-clamp-2">
+                          {latLngRegex.test(request.pickup_address)
+                            ? resolvedAddresses[request.id] ||
+                              request.pickup_address
+                            : request.pickup_address}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-3 border-t border-blue-200">
+                      <p className="text-xs text-gray-500">
+                        {formatDateTime(request.created_at)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
 
         {/* Modal for Request Details */}
         <Dialog
@@ -594,12 +807,11 @@ export default function AmbulanceManagement() {
             <DialogHeader>
               <DialogTitle>Request Details</DialogTitle>
               <DialogDescription>
-                Manage and view details for the selected request
+                View and manage ambulance request details
               </DialogDescription>
             </DialogHeader>
 
             <div className="p-6 space-y-6">
-              {/* Header Info */}
               {selectedRequest && (
                 <>
                   <div>
@@ -722,40 +934,6 @@ export default function AmbulanceManagement() {
                             >
                               Open in Google Maps
                             </a>
-                            {resolvingIds[selectedRequest.id] ? (
-                              <span className="text-sm text-gray-500">
-                                Resolving address...
-                              </span>
-                            ) : null}
-                          </div>
-                        )}
-
-                        {/* Show customer's signup captured address (if any) */}
-                        {selectedRequest.customer_signup_address && (
-                          <div className="mt-3">
-                            <p className="text-sm font-medium text-gray-900">
-                              Signup Address
-                            </p>
-                            <p className="text-gray-600">
-                              {selectedRequest.customer_signup_address}
-                            </p>
-                            <a
-                              href={
-                                selectedRequest.customer_signup_lat &&
-                                selectedRequest.customer_signup_lng
-                                  ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                                      `${selectedRequest.customer_signup_lat},${selectedRequest.customer_signup_lng}`,
-                                    )}`
-                                  : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                                      selectedRequest.customer_signup_address,
-                                    )}`
-                              }
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-sm text-blue-600 hover:underline mt-2 inline-block"
-                            >
-                              Open Signup Address in Google Maps
-                            </a>
                           </div>
                         )}
                       </div>
@@ -776,52 +954,57 @@ export default function AmbulanceManagement() {
                     )}
                   </div>
 
-                  {/* Assigned Staff */}
-                  {selectedRequest.assigned_staff_name && (
-                    <>
-                      <Separator />
-                      <div className="bg-green-50 p-4 rounded-lg">
+                  {/* Hospital Response */}
+                  {selectedRequest.forwarded_to_hospital_id &&
+                    selectedRequest.hospital_response && (
+                      <div className="bg-purple-50 p-4 rounded-lg">
                         <div className="flex items-center space-x-2 mb-3">
-                          <User className="w-5 h-5 text-green-600" />
-                          <span className="font-semibold text-green-900">
-                            Assigned Staff
+                          <Hospital className="w-5 h-5 text-purple-600" />
+                          <span className="font-semibold text-purple-900">
+                            Hospital Response
                           </span>
                         </div>
                         <div className="space-y-2">
                           <div>
-                            <span className="font-medium text-green-800">
-                              Name:{" "}
+                            <span className="font-medium text-purple-800">
+                              Status:{" "}
                             </span>
-                            <span className="text-green-700">
-                              {selectedRequest.assigned_staff_name}
+                            <span className="text-purple-700 capitalize">
+                              {selectedRequest.hospital_response}
                             </span>
                           </div>
-                          {selectedRequest.assigned_staff_phone && (
+                          {selectedRequest.hospital_response_notes && (
                             <div>
-                              <span className="font-medium text-green-800">
-                                Phone:{" "}
+                              <span className="font-medium text-purple-800">
+                                Notes:{" "}
                               </span>
-                              <span className="text-green-700">
-                                {selectedRequest.assigned_staff_phone}
-                              </span>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-6 px-2 text-xs ml-2"
-                                onClick={() =>
-                                  window.open(
-                                    `tel:${selectedRequest.assigned_staff_phone}`,
-                                  )
-                                }
-                              >
-                                Call
-                              </Button>
+                              <p className="text-purple-700">
+                                {selectedRequest.hospital_response_notes}
+                              </p>
                             </div>
                           )}
                         </div>
                       </div>
-                    </>
-                  )}
+                    )}
+
+                  {/* Forward to Hospital Button */}
+                  {!selectedRequest.forwarded_to_hospital_id &&
+                    selectedRequest.status === "pending" && (
+                      <div>
+                        <Button
+                          onClick={() => {
+                            setForwardModalOpen(true);
+                            fetchHospitalsByState(
+                              selectedRequest.customer_state,
+                            );
+                          }}
+                          className="w-full gap-2"
+                        >
+                          <Send className="w-4 h-4" />
+                          Forward to Hospital
+                        </Button>
+                      </div>
+                    )}
 
                   {/* Notes */}
                   {selectedRequest.notes && (
@@ -838,47 +1021,6 @@ export default function AmbulanceManagement() {
                       </div>
                     </>
                   )}
-
-                  {/* Status Progress */}
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <span className="text-sm font-medium text-gray-900 block mb-3">
-                      Status Progress
-                    </span>
-                    <div className="flex items-center space-x-4">
-                      <div
-                        className={`flex items-center space-x-2 ${["pending", "assigned", "on_the_way", "completed"].includes(selectedRequest.status) ? "text-blue-600" : "text-gray-400"}`}
-                      >
-                        <div
-                          className={`w-2 h-2 rounded-full ${selectedRequest.status === "pending" || selectedRequest.status === "assigned" || selectedRequest.status === "on_the_way" || selectedRequest.status === "completed" ? "bg-blue-600" : "bg-gray-300"}`}
-                        ></div>
-                        <span className="text-xs font-medium">Requested</span>
-                      </div>
-                      <div
-                        className={`flex items-center space-x-2 ${["assigned", "on_the_way", "completed"].includes(selectedRequest.status) ? "text-blue-600" : "text-gray-400"}`}
-                      >
-                        <div
-                          className={`w-2 h-2 rounded-full ${selectedRequest.status === "assigned" || selectedRequest.status === "on_the_way" || selectedRequest.status === "completed" ? "bg-blue-600" : "bg-gray-300"}`}
-                        ></div>
-                        <span className="text-xs font-medium">Assigned</span>
-                      </div>
-                      <div
-                        className={`flex items-center space-x-2 ${["on_the_way", "completed"].includes(selectedRequest.status) ? "text-orange-600" : "text-gray-400"}`}
-                      >
-                        <div
-                          className={`w-2 h-2 rounded-full ${selectedRequest.status === "on_the_way" || selectedRequest.status === "completed" ? "bg-orange-600" : "bg-gray-300"}`}
-                        ></div>
-                        <span className="text-xs font-medium">On The Way</span>
-                      </div>
-                      <div
-                        className={`flex items-center space-x-2 ${selectedRequest.status === "completed" ? "text-green-600" : "text-gray-400"}`}
-                      >
-                        <div
-                          className={`w-2 h-2 rounded-full ${selectedRequest.status === "completed" ? "bg-green-600" : "bg-gray-300"}`}
-                        ></div>
-                        <span className="text-xs font-medium">Completed</span>
-                      </div>
-                    </div>
-                  </div>
                 </>
               )}
             </div>
@@ -892,6 +1034,62 @@ export default function AmbulanceManagement() {
                 }}
               >
                 Close
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Forward to Hospital Modal */}
+        <Dialog open={forwardModalOpen} onOpenChange={setForwardModalOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Forward to Hospital</DialogTitle>
+              <DialogDescription>
+                Select a hospital to forward this request
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              {hospitals.length === 0 && !hospitalsLoading && (
+                <p className="text-sm text-gray-500 text-center py-4">
+                  No hospitals found in this state
+                </p>
+              )}
+
+              {hospitalsLoading && (
+                <div className="flex justify-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                </div>
+              )}
+
+              {hospitals.length > 0 && (
+                <Select value={selectedHospital} onValueChange={setSelectedHospital}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a hospital" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {hospitals.map((hospital) => (
+                      <SelectItem
+                        key={hospital.user_id}
+                        value={hospital.user_id.toString()}
+                      >
+                        {hospital.name} - {hospital.address}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setForwardModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={forwardToHospital} disabled={!selectedHospital}>
+                Forward
               </Button>
             </div>
           </DialogContent>
