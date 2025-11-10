@@ -207,14 +207,22 @@ function createTables(): void {
         emergency_type TEXT NOT NULL,
         customer_condition TEXT,
         contact_number TEXT NOT NULL,
-        status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'assigned', 'on_the_way', 'completed', 'cancelled')),
+        status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'assigned', 'on_the_way', 'completed', 'cancelled', 'forwarded_to_hospital', 'hospital_accepted', 'hospital_rejected')),
         priority TEXT DEFAULT 'normal' CHECK(priority IN ('low', 'normal', 'high', 'critical')),
         assigned_staff_id INTEGER,
         notes TEXT,
+        is_read INTEGER DEFAULT 0,
+        forwarded_to_hospital_id INTEGER,
+        hospital_response TEXT CHECK(hospital_response IN ('pending', 'accepted', 'rejected')),
+        hospital_response_notes TEXT,
+        hospital_response_date DATETIME,
+        customer_state TEXT,
+        customer_district TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (customer_user_id) REFERENCES users (id) ON DELETE CASCADE,
-        FOREIGN KEY (assigned_staff_id) REFERENCES users (id) ON DELETE SET NULL
+        FOREIGN KEY (assigned_staff_id) REFERENCES users (id) ON DELETE SET NULL,
+        FOREIGN KEY (forwarded_to_hospital_id) REFERENCES users (id) ON DELETE SET NULL
       )
     `);
 
@@ -378,6 +386,21 @@ function createTables(): void {
       )
     `);
 
+    // Notifications table
+    db.run(`
+      CREATE TABLE IF NOT EXISTS notifications (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        type TEXT NOT NULL,
+        title TEXT NOT NULL,
+        message TEXT NOT NULL,
+        is_read INTEGER DEFAULT 0,
+        related_id INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      )
+    `);
+
     console.log("✅ All SQLite tables created successfully");
   } catch (error) {
     console.error("❌ Error creating tables:", error);
@@ -448,7 +471,70 @@ async function runMigrations(): Promise<void> {
       console.log("⚠️ Address fields migration skipped:", error.message);
     }
 
-    console.log("��� All migrations completed");
+    // Migration 4: Add state and district columns to users table (for admin state-wise filtering)
+    try {
+      const usersTableInfo = db.exec("PRAGMA table_info(users)");
+      const hasState = usersTableInfo[0]?.values.some(
+        (row) => row[1] === "state",
+      );
+
+      if (!hasState) {
+        console.log("📝 Adding state and district columns to users table...");
+        db.run("ALTER TABLE users ADD COLUMN state TEXT");
+        db.run("ALTER TABLE users ADD COLUMN district TEXT");
+        console.log("✅ State and district columns added successfully");
+      }
+    } catch (error) {
+      console.log(
+        "⚠️ State and district columns migration skipped:",
+        error.message,
+      );
+    }
+
+    // Migration 5: Add ambulance request forwarding columns
+    try {
+      const ambulanceTableInfo = db.exec(
+        "PRAGMA table_info(ambulance_requests)",
+      );
+      const hasIsRead = ambulanceTableInfo[0]?.values.some(
+        (row) => row[1] === "is_read",
+      );
+
+      if (!hasIsRead) {
+        console.log(
+          "📝 Adding forwarding and read tracking columns to ambulance_requests...",
+        );
+        db.run(
+          "ALTER TABLE ambulance_requests ADD COLUMN is_read INTEGER DEFAULT 0",
+        );
+        db.run(
+          "ALTER TABLE ambulance_requests ADD COLUMN forwarded_to_hospital_id INTEGER",
+        );
+        db.run(
+          "ALTER TABLE ambulance_requests ADD COLUMN hospital_response TEXT",
+        );
+        db.run(
+          "ALTER TABLE ambulance_requests ADD COLUMN hospital_response_notes TEXT",
+        );
+        db.run(
+          "ALTER TABLE ambulance_requests ADD COLUMN hospital_response_date DATETIME",
+        );
+        db.run("ALTER TABLE ambulance_requests ADD COLUMN customer_state TEXT");
+        db.run(
+          "ALTER TABLE ambulance_requests ADD COLUMN customer_district TEXT",
+        );
+        console.log(
+          "✅ Ambulance request forwarding columns added successfully",
+        );
+      }
+    } catch (error) {
+      console.log(
+        "⚠️ Ambulance request columns migration skipped:",
+        error.message,
+      );
+    }
+
+    console.log("🔄 All migrations completed");
   } catch (error) {
     console.error("❌ Error running migrations:", error);
   }
@@ -1278,7 +1364,7 @@ export async function reactivateUser(userId: number): Promise<boolean> {
 
 export async function deleteUser(userId: number): Promise<boolean> {
   try {
-    console.log(`��️ Deleting user ID: ${userId}`);
+    console.log(`���️ Deleting user ID: ${userId}`);
 
     // Check if user is admin
     const userResult = db.exec("SELECT role FROM users WHERE id = ?", [userId]);

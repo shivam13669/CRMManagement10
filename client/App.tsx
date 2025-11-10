@@ -54,6 +54,7 @@ import StaffAmbulanceManagement from "./pages/StaffAmbulanceManagement";
 import HospitalDashboard from "./pages/HospitalDashboard";
 import HospitalManagement from "./pages/HospitalManagement";
 import HospitalAmbulances from "./pages/HospitalAmbulances";
+import HospitalServiceRequests from "./pages/HospitalServiceRequests";
 import HospitalStaff from "./pages/HospitalStaff";
 import HospitalInventory from "./pages/HospitalInventory";
 import HospitalReports from "./pages/HospitalReports";
@@ -164,6 +165,10 @@ function App() {
             <Route
               path="/hospital-ambulances"
               element={<HospitalAmbulances />}
+            />
+            <Route
+              path="/hospital-service-requests"
+              element={<HospitalServiceRequests />}
             />
             <Route path="/hospital-staff" element={<HospitalStaff />} />
             <Route path="/hospital-inventory" element={<HospitalInventory />} />
