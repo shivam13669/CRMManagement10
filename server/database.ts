@@ -471,7 +471,66 @@ async function runMigrations(): Promise<void> {
       console.log("⚠️ Address fields migration skipped:", error.message);
     }
 
-    console.log("��� All migrations completed");
+    // Migration 4: Add state and district columns to users table (for admin state-wise filtering)
+    try {
+      const usersTableInfo = db.exec("PRAGMA table_info(users)");
+      const hasState = usersTableInfo[0]?.values.some(
+        (row) => row[1] === "state",
+      );
+
+      if (!hasState) {
+        console.log(
+          "📝 Adding state and district columns to users table...",
+        );
+        db.run("ALTER TABLE users ADD COLUMN state TEXT");
+        db.run("ALTER TABLE users ADD COLUMN district TEXT");
+        console.log("✅ State and district columns added successfully");
+      }
+    } catch (error) {
+      console.log("⚠️ State and district columns migration skipped:", error.message);
+    }
+
+    // Migration 5: Add ambulance request forwarding columns
+    try {
+      const ambulanceTableInfo = db.exec(
+        "PRAGMA table_info(ambulance_requests)",
+      );
+      const hasIsRead = ambulanceTableInfo[0]?.values.some(
+        (row) => row[1] === "is_read",
+      );
+
+      if (!hasIsRead) {
+        console.log(
+          "📝 Adding forwarding and read tracking columns to ambulance_requests...",
+        );
+        db.run(
+          "ALTER TABLE ambulance_requests ADD COLUMN is_read INTEGER DEFAULT 0",
+        );
+        db.run(
+          "ALTER TABLE ambulance_requests ADD COLUMN forwarded_to_hospital_id INTEGER",
+        );
+        db.run(
+          "ALTER TABLE ambulance_requests ADD COLUMN hospital_response TEXT",
+        );
+        db.run(
+          "ALTER TABLE ambulance_requests ADD COLUMN hospital_response_notes TEXT",
+        );
+        db.run(
+          "ALTER TABLE ambulance_requests ADD COLUMN hospital_response_date DATETIME",
+        );
+        db.run(
+          "ALTER TABLE ambulance_requests ADD COLUMN customer_state TEXT",
+        );
+        db.run(
+          "ALTER TABLE ambulance_requests ADD COLUMN customer_district TEXT",
+        );
+        console.log("✅ Ambulance request forwarding columns added successfully");
+      }
+    } catch (error) {
+      console.log("⚠️ Ambulance request columns migration skipped:", error.message);
+    }
+
+    console.log("🔄 All migrations completed");
   } catch (error) {
     console.error("❌ Error running migrations:", error);
   }
@@ -1301,7 +1360,7 @@ export async function reactivateUser(userId: number): Promise<boolean> {
 
 export async function deleteUser(userId: number): Promise<boolean> {
   try {
-    console.log(`��️ Deleting user ID: ${userId}`);
+    console.log(`���️ Deleting user ID: ${userId}`);
 
     // Check if user is admin
     const userResult = db.exec("SELECT role FROM users WHERE id = ?", [userId]);
