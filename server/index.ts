@@ -167,6 +167,43 @@ export async function createServer() {
     handleAdminUpdateHospital,
   );
 
+  // Hospital Ambulances routes
+  app.get(
+    "/api/hospital/ambulances",
+    authenticateToken,
+    handleGetHospitalAmbulances,
+  );
+  app.post(
+    "/api/hospital/ambulances",
+    authenticateToken,
+    handleCreateHospitalAmbulance,
+  );
+  app.put(
+    "/api/hospital/ambulances/:ambulanceId",
+    authenticateToken,
+    handleUpdateHospitalAmbulance,
+  );
+  app.delete(
+    "/api/hospital/ambulances/:ambulanceId",
+    authenticateToken,
+    handleDeleteHospitalAmbulance,
+  );
+  app.post(
+    "/api/hospital/ambulances/:ambulanceId/park",
+    authenticateToken,
+    handleParkAmbulance,
+  );
+  app.post(
+    "/api/hospital/ambulances/:ambulanceId/assign/:requestId",
+    authenticateToken,
+    handleAssignAmbulanceToRequest,
+  );
+  app.get(
+    "/api/hospital/ambulances/available",
+    authenticateToken,
+    handleGetAvailableAmbulances,
+  );
+
   // Data routes (protected)
   app.get("/api/customers", authenticateToken, handleGetCustomers);
   app.get("/api/doctors", authenticateToken, handleGetDoctors);
