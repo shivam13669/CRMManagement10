@@ -58,6 +58,7 @@ import {
   handleAddDoctor,
   handleGetAdminUsers,
   handleAdminSetUserPassword,
+  handlePromoteToSystemAdmin,
 } from "./routes/user-management";
 import {
   handleCreateFeedback,
