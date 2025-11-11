@@ -186,6 +186,8 @@ export const handleGetAmbulanceRequests: RequestHandler = async (req, res) => {
         ar.is_read,
         ar.forwarded_to_hospital_id,
         ar.hospital_response,
+        ar.hospital_response_notes,
+        ar.hospital_response_date,
         ar.assigned_ambulance_id,
         ar.customer_state,
         ar.customer_district,
