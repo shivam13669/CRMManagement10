@@ -93,9 +93,8 @@ export function Layout({ children }: LayoutProps) {
       const token = localStorage.getItem("authToken");
       if (!token) return;
 
-      const response = await fetch("/api/notifications", {
+      const response = await fetchWithAuth("/api/notifications", {
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
