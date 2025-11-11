@@ -132,7 +132,11 @@ export default function PatientNotifications() {
           window.location.href = "/feedback";
           break;
         case "ambulance":
-          window.location.href = "/request-ambulance";
+          if (notification.relatedId) {
+            window.location.href = `/track-request?requestId=${notification.relatedId}`;
+          } else {
+            window.location.href = "/track-request";
+          }
           break;
         default:
           console.log("Notification clicked:", notification);
