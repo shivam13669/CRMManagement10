@@ -162,9 +162,8 @@ export default function AmbulanceManagement() {
         return;
       }
 
-      const response = await fetch("/api/ambulance", {
+      const response = await fetchWithAuth("/api/ambulance", {
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
