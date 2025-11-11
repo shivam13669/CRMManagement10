@@ -194,9 +194,8 @@ export default function AmbulanceManagement() {
 
       if (!token || !stateToUse) return;
 
-      const response = await fetch(`/api/hospitals/by-state/${stateToUse}`, {
+      const response = await fetchWithAuth(`/api/hospitals/by-state/${stateToUse}`, {
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
