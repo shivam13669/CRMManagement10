@@ -155,10 +155,9 @@ export function Layout({ children }: LayoutProps) {
       if (notification.unread) {
         const token = localStorage.getItem("authToken");
         if (token) {
-          await fetch(`/api/notifications/${notification.id}/read`, {
+          await fetchWithAuth(`/api/notifications/${notification.id}/read`, {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
           });
