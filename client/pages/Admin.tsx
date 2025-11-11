@@ -380,6 +380,8 @@ function ManageAdmins({
   setStatusFilter: (s: string) => void;
   exportAdminsCSV: (items: AdminUser[]) => void;
 }) {
+  const currentUser = authUtils.getCurrentUser();
+
   const [alert, setAlert] = useState<{
     type: "success" | "error";
     message: string;
