@@ -216,6 +216,33 @@ export const handleSuspendUser: RequestHandler = async (req, res) => {
       return res.status(400).json({ error: "Invalid user ID" });
     }
 
+    const targetUser = getUserById(userIdNum);
+    if (!targetUser) {
+      return res.status(404).json({ error: "Target user not found" });
+    }
+
+    // If target is an admin, only system admins can suspend state admins
+    if (targetUser.role === "admin") {
+      const caller = (req as any).user;
+      const callerUser = getUserByEmail(caller.email);
+      if (!callerUser || callerUser.admin_type !== "system") {
+        return res.status(403).json({ error: "Only system admins can suspend admin accounts" });
+      }
+
+      // Only allow suspending state-level admins, not system admins
+      if (targetUser.admin_type === "system") {
+        return res.status(403).json({ error: "Cannot suspend system administrator" });
+      }
+
+      const success = await suspendAdminById(userIdNum);
+      if (success) {
+        return res.json({ message: "Admin suspended successfully", userId: userIdNum, action: "suspended" });
+      }
+
+      return res.status(500).json({ error: "Failed to suspend admin user" });
+    }
+
+    // Non-admin users follow regular flow
     const success = await suspendUser(userIdNum);
 
     if (success) {
