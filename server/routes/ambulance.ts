@@ -892,6 +892,7 @@ export const handleGetHospitalForwardedRequests: RequestHandler = async (
         ar.assigned_ambulance_id,
         ar.created_at,
         ar.updated_at,
+        ar.is_read,
         u.full_name as patient_name,
         u.email as patient_email,
         u.phone as patient_phone,
