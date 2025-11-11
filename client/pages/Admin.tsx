@@ -74,6 +74,7 @@ import {
   Filter,
   Plus,
   LayoutList,
+  MapPin,
 } from "lucide-react";
 
 interface AdminUser {
