@@ -68,6 +68,9 @@ interface AmbulanceRequest {
   is_read?: number;
   forwarded_to_hospital_id?: number;
   hospital_response?: string;
+  hospital_response_notes?: string;
+  hospital_response_date?: string;
+  assigned_ambulance_id?: number;
   created_at: string;
   patient_name: string;
   patient_email: string;
@@ -77,6 +80,10 @@ interface AmbulanceRequest {
   customer_signup_address?: string;
   customer_signup_lat?: string;
   customer_signup_lng?: string;
+  ambulance_registration?: string;
+  ambulance_type?: string;
+  ambulance_driver_name?: string;
+  ambulance_driver_phone?: string;
   // Added forwarded hospital display fields
   forwarded_hospital_name?: string;
   forwarded_hospital_address?: string;
