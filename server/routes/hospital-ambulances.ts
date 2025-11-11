@@ -21,10 +21,7 @@ export interface HospitalAmbulance {
 }
 
 // Get all ambulances for a hospital
-export const handleGetHospitalAmbulances: RequestHandler = async (
-  req,
-  res,
-) => {
+export const handleGetHospitalAmbulances: RequestHandler = async (req, res) => {
   try {
     const { role, userId } = (req as any).user;
 
@@ -145,9 +142,7 @@ export const handleCreateHospitalAmbulance: RequestHandler = async (
     );
 
     // Get the created ambulance
-    const result = db.exec(
-      "SELECT last_insert_rowid() as id",
-    );
+    const result = db.exec("SELECT last_insert_rowid() as id");
     const ambulanceId = result[0].values[0][0];
 
     // Update hospital's ambulance count
@@ -321,7 +316,8 @@ export const handleDeleteHospitalAmbulance: RequestHandler = async (
 
     if (status === "assigned") {
       return res.status(400).json({
-        error: "Cannot delete ambulance that is currently assigned to a request",
+        error:
+          "Cannot delete ambulance that is currently assigned to a request",
       });
     }
 
@@ -467,9 +463,7 @@ export const handleAssignAmbulanceToRequest: RequestHandler = async (
       [ambulanceId, requestId],
     );
 
-    console.log(
-      `🚑 Ambulance ${ambulanceId} assigned to request ${requestId}`,
-    );
+    console.log(`🚑 Ambulance ${ambulanceId} assigned to request ${requestId}`);
 
     res.json({ message: "Ambulance assigned successfully" });
   } catch (error) {

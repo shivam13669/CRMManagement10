@@ -924,7 +924,9 @@ export default function HospitalServiceRequests() {
                 }
                 className="bg-green-600 hover:bg-green-700"
               >
-                {submittingResponse ? "Accepting..." : "Accept with Selected Ambulance"}
+                {submittingResponse
+                  ? "Accepting..."
+                  : "Accept with Selected Ambulance"}
               </Button>
             </div>
           </DialogContent>

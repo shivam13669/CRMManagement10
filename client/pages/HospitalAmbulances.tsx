@@ -224,16 +224,13 @@ export default function HospitalAmbulances() {
       setDeleting(ambulanceId);
       const token = localStorage.getItem("authToken");
 
-      const response = await fetch(
-        `/api/hospital/ambulances/${ambulanceId}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+      const response = await fetch(`/api/hospital/ambulances/${ambulanceId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-      );
+      });
 
       if (response.ok) {
         toast.success("Ambulance deleted successfully");
@@ -288,7 +285,8 @@ export default function HospitalAmbulances() {
       ambulance_type: ambulance.ambulance_type,
       model: ambulance.model || "",
       manufacturer: ambulance.manufacturer || "",
-      registration_year: ambulance.registration_year || new Date().getFullYear(),
+      registration_year:
+        ambulance.registration_year || new Date().getFullYear(),
       driver_name: ambulance.driver_name || "",
       driver_phone: ambulance.driver_phone || "",
       driver_license_number: ambulance.driver_license_number || "",
@@ -338,9 +336,12 @@ export default function HospitalAmbulances() {
     }
   };
 
-  const availableCount = ambulances.filter((a) => a.status === "available")
-    .length;
-  const assignedCount = ambulances.filter((a) => a.status === "assigned").length;
+  const availableCount = ambulances.filter(
+    (a) => a.status === "available",
+  ).length;
+  const assignedCount = ambulances.filter(
+    (a) => a.status === "assigned",
+  ).length;
 
   if (loading) {
     return (
@@ -513,25 +514,26 @@ export default function HospitalAmbulances() {
                     </div>
                   )}
 
-                  {ambulance.status === "assigned" && ambulance.patient_name && (
-                    <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                      <p className="text-xs font-semibold text-blue-900 mb-2">
-                        Currently Assigned
-                      </p>
-                      <div className="space-y-1 text-sm">
-                        <p className="text-blue-800">
-                          <span className="font-medium">Patient:</span>{" "}
-                          {ambulance.patient_name}
+                  {ambulance.status === "assigned" &&
+                    ambulance.patient_name && (
+                      <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <p className="text-xs font-semibold text-blue-900 mb-2">
+                          Currently Assigned
                         </p>
-                        {ambulance.emergency_type && (
+                        <div className="space-y-1 text-sm">
                           <p className="text-blue-800">
-                            <span className="font-medium">Type:</span>{" "}
-                            {ambulance.emergency_type}
+                            <span className="font-medium">Patient:</span>{" "}
+                            {ambulance.patient_name}
                           </p>
-                        )}
+                          {ambulance.emergency_type && (
+                            <p className="text-blue-800">
+                              <span className="font-medium">Type:</span>{" "}
+                              {ambulance.emergency_type}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
                   <div className="flex gap-2 pt-3 border-t">
                     <Button
@@ -794,9 +796,7 @@ export default function HospitalAmbulances() {
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Edit Ambulance</DialogTitle>
-              <DialogDescription>
-                Update ambulance details
-              </DialogDescription>
+              <DialogDescription>Update ambulance details</DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4 py-4">
@@ -1075,7 +1075,9 @@ export default function HospitalAmbulances() {
                     <div className="flex items-start gap-2">
                       <MapPin className="w-4 h-4 text-gray-500 mt-0.5" />
                       <div>
-                        <p className="text-sm text-gray-600">Current Location</p>
+                        <p className="text-sm text-gray-600">
+                          Current Location
+                        </p>
                         <p className="font-semibold">
                           {selectedAmbulance.current_location}
                         </p>

@@ -531,7 +531,8 @@ export default function AdminDashboard() {
                       </div>
                       {request.ambulance_registration && (
                         <div className="text-xs text-green-600 font-medium mt-1">
-                          🚑 {request.ambulance_registration} ({request.ambulance_type})
+                          🚑 {request.ambulance_registration} (
+                          {request.ambulance_type})
                         </div>
                       )}
                       <div className="text-xs text-gray-400 mt-1">
