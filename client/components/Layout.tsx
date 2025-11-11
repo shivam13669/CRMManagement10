@@ -271,8 +271,8 @@ export function Layout({ children }: LayoutProps) {
               <User className="w-5 h-5 text-white" />
             </div>
             <div>
-              <div className="font-medium text-gray-900">Admin</div>
-              <div className="text-sm text-primary">Administrator</div>
+              <div className="font-medium text-gray-900">{currentUser?.userName || "Admin"}</div>
+              <div className="text-sm text-primary">{currentUser?.admin_type === "state" ? "State Admin" : (currentUser?.role ? currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1) : "Administrator")}</div>
             </div>
           </div>
         </div>
