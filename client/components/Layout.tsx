@@ -84,6 +84,25 @@ export function Layout({ children }: LayoutProps) {
     const token = localStorage.getItem("authToken");
     if (!token) {
       window.location.href = "/login";
+    } else {
+      // Fetch full profile to get admin_type/state and persist locally
+      (async () => {
+        try {
+          const res = await fetchWithAuth("/api/auth/profile", { headers: { "Content-Type": "application/json" } });
+          if (res && res.ok) {
+            const json = await res.json();
+            const user = json.user || {};
+            if (user.admin_type) localStorage.setItem("admin_type", user.admin_type);
+            if (user.state) localStorage.setItem("state", user.state);
+            // Force re-render by updating state
+            setNotifications([]);
+            // restore notifications after profile fetch
+            fetchNotifications();
+          }
+        } catch (e) {
+          // ignore
+        }
+      })();
     }
   }, []);
 
