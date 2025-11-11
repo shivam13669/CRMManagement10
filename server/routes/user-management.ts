@@ -100,6 +100,51 @@ export const handleGetAdminUsers: RequestHandler = async (req, res) => {
   }
 };
 
+// Promote an admin user to system admin (system admins only)
+export const handlePromoteToSystemAdmin: RequestHandler = async (req, res) => {
+  try {
+    const caller = (req as any).user;
+    const { role: callerRole, email: callerEmail } = caller || {};
+
+    // Must be an admin to perform this action
+    if (callerRole !== "admin") {
+      return res.status(403).json({ error: "Unauthorized. Admin access required." });
+    }
+
+    // Ensure caller is a system admin
+    const callerUser = getUserByEmail(callerEmail);
+    if (!callerUser || callerUser.admin_type !== "system") {
+      return res
+        .status(403)
+        .json({ error: "Only system administrators can promote other admins to system level." });
+    }
+
+    const { email } = req.body || {};
+    if (!email) {
+      return res.status(400).json({ error: "Target email is required" });
+    }
+
+    const targetUser = getUserByEmail(email);
+    if (!targetUser) {
+      return res.status(404).json({ error: "Target user not found" });
+    }
+
+    if (targetUser.role !== "admin") {
+      return res.status(400).json({ error: "Target user is not an admin" });
+    }
+
+    const ok = setAdminTypeByEmail(email, "system");
+    if (!ok) {
+      return res.status(500).json({ error: "Failed to promote user" });
+    }
+
+    res.json({ message: "User promoted to system admin successfully", email });
+  } catch (error) {
+    console.error("Promote to system admin error:", error);
+    res.status(500).json({ error: "Internal server error while promoting user" });
+  }
+};
+
 // Admin set user password (no current password required)
 export const handleAdminSetUserPassword: RequestHandler = async (req, res) => {
   try {
