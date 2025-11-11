@@ -534,7 +534,7 @@ async function runMigrations(): Promise<void> {
           "SELECT sql FROM sqlite_master WHERE type='table' AND name='ambulance_requests'",
         );
         const createSql = tableSqlRes[0]?.values[0][0] || "";
-        if (createSql && !createSql.includes("forwarded_to_hospital")) {
+        if (createSql && !createSql.includes("hospital_accepted")) {
           console.log(
             "🛠️ Updating ambulance_requests status CHECK to include forwarded statuses...",
           );
