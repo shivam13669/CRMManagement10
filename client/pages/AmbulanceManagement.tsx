@@ -276,8 +276,25 @@ export default function AmbulanceManagement() {
 
       if (response.ok) {
         toast.success("Request forwarded to hospital successfully");
+        // Update selectedRequest in-place so the modal immediately shows forwarded info
+        const hospitalIdNum = parseInt(selectedHospital || "0");
+        const forwardedHosp = hospitals.find((h) => h.user_id === hospitalIdNum);
+        setSelectedRequest((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            forwarded_to_hospital_id: hospitalIdNum,
+            forwarded_hospital_name: forwardedHosp?.hospital_name || forwardedHosp?.name || forwardedHosp?.user_id?.toString(),
+            forwarded_hospital_address: forwardedHosp?.address || "",
+            hospital_response: "pending",
+            status: prev.status === "pending" ? prev.status : prev.status,
+          } as any;
+        });
+
+        // Close only the forward modal, keep the main request modal open
         setForwardModalOpen(false);
         setSelectedHospital("");
+        // Refresh list in background
         fetchRequests();
       } else {
         let errMsg = "Failed to forward request";
