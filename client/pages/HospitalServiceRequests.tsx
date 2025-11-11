@@ -123,14 +123,49 @@ export default function HospitalServiceRequests() {
     }
   };
 
+  const fetchAvailableAmbulances = async () => {
+    try {
+      setLoadingAmbulances(true);
+      const token = localStorage.getItem("authToken");
+      if (!token) return;
+
+      const response = await fetch("/api/hospital/ambulances/available", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setAvailableAmbulances(data.ambulances || []);
+      } else {
+        console.error("Failed to fetch ambulances:", response.status);
+        toast.error("Failed to load available ambulances");
+      }
+    } catch (error) {
+      console.error("Error fetching ambulances:", error);
+      toast.error("Error loading ambulances");
+    } finally {
+      setLoadingAmbulances(false);
+    }
+  };
+
   const submitResponse = async () => {
     if (!selectedRequest) return;
+
+    // If accepting, require ambulance selection
+    if (responseType === "accepted" && !selectedAmbulance) {
+      toast.error("Please select an ambulance to accept this request");
+      return;
+    }
 
     try {
       setSubmittingResponse(true);
       const token = localStorage.getItem("authToken");
       if (!token) return;
 
+      // First, submit the hospital response
       const response = await fetch(
         `/api/ambulance/${selectedRequest.id}/hospital-response`,
         {
@@ -146,16 +181,40 @@ export default function HospitalServiceRequests() {
         },
       );
 
-      if (response.ok) {
-        toast.success(
-          `Request ${responseType} successfully. Notifications sent to customer and admin.`,
-        );
-        setResponseModalOpen(false);
-        setResponseNotes("");
-        fetchRequests();
-      } else {
+      if (!response.ok) {
         toast.error("Failed to submit response");
+        setSubmittingResponse(false);
+        return;
       }
+
+      // If accepted, assign the ambulance
+      if (responseType === "accepted" && selectedAmbulance) {
+        const assignResponse = await fetch(
+          `/api/hospital/ambulances/${selectedAmbulance}/assign/${selectedRequest.id}`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          },
+        );
+
+        if (!assignResponse.ok) {
+          toast.error("Failed to assign ambulance to request");
+          setSubmittingResponse(false);
+          return;
+        }
+      }
+
+      toast.success(
+        `Request ${responseType} successfully. Notifications sent to customer and admin.`,
+      );
+      setResponseModalOpen(false);
+      setAmbulanceSelectionOpen(false);
+      setResponseNotes("");
+      setSelectedAmbulance(null);
+      fetchRequests();
     } catch (error) {
       console.error("Error submitting response:", error);
       toast.error("Error submitting response");
