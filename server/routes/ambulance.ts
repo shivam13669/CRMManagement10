@@ -636,10 +636,10 @@ export const handleHospitalResponse: RequestHandler = async (req, res) => {
         .json({ error: "Response must be accepted or rejected" });
     }
 
-    // Check if request is forwarded to this hospital
+    // Check if request is forwarded to this hospital and get customer/state info
     const checkResult = db.exec(
       `
-      SELECT customer_user_id, id
+      SELECT customer_user_id, customer_state, id
       FROM ambulance_requests
       WHERE id = ? AND forwarded_to_hospital_id = ?
     `,
@@ -652,7 +652,10 @@ export const handleHospitalResponse: RequestHandler = async (req, res) => {
       });
     }
 
-    const customerUserId = checkResult[0].values[0][0];
+    const columns = checkResult[0].columns;
+    const row = checkResult[0].values[0];
+    const customerUserId = row[0];
+    const customerState = row[1];
 
     const newStatus =
       response === "accepted" ? "hospital_accepted" : "hospital_rejected";
@@ -682,14 +685,46 @@ export const handleHospitalResponse: RequestHandler = async (req, res) => {
       [customerUserId, message, requestId],
     );
 
-    // Create notification for admin
-    db.run(
+    // Get all admin user IDs that should be notified
+    // 1. System admin
+    // 2. State admin for the customer's state (if applicable)
+    const adminResult = db.exec(
       `
-      INSERT INTO notifications (user_id, type, title, message, related_id, created_at)
-      VALUES (?, 'ambulance', 'Hospital Response', 'Hospital has responded to ambulance request', ?, datetime('now'))
+      SELECT id, admin_type
+      FROM users
+      WHERE role = 'admin' AND (
+        admin_type = 'system' OR
+        (admin_type = 'state' AND state = ?)
+      )
     `,
-      [userId, requestId],
+      [customerState],
     );
+
+    // Create notification for all admins
+    if (adminResult.length > 0 && adminResult[0].values.length > 0) {
+      const adminColumns = adminResult[0].columns;
+      const adminRows = adminResult[0].values;
+
+      adminRows.forEach((adminRow) => {
+        const admin: any = {};
+        adminColumns.forEach((col, index) => {
+          admin[col] = adminRow[index];
+        });
+
+        const adminMessage =
+          response === "accepted"
+            ? `Hospital has accepted ambulance request #${requestId}`
+            : `Hospital has rejected ambulance request #${requestId}`;
+
+        db.run(
+          `
+          INSERT INTO notifications (user_id, type, title, message, related_id, created_at)
+          VALUES (?, 'ambulance', 'Hospital Response', ?, ?, datetime('now'))
+        `,
+          [admin.id, adminMessage, requestId],
+        );
+      });
+    }
 
     console.log(
       `🏥 Hospital ${userId} responded ${response} to ambulance request ${requestId}`,
