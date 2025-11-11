@@ -68,6 +68,11 @@ interface ForwardedRequest {
   patient_email: string;
   patient_phone: string;
   is_read?: number;
+  assigned_ambulance_id?: number;
+  ambulance_registration?: string;
+  ambulance_type?: string;
+  ambulance_driver_name?: string;
+  ambulance_driver_phone?: string;
 }
 
 export default function HospitalServiceRequests() {
