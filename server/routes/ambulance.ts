@@ -98,7 +98,7 @@ export const handleCreateAmbulanceRequest: RequestHandler = async (
             INSERT INTO notifications (user_id, type, title, message, related_id, created_at)
             VALUES (?, 'ambulance', 'Urgent Ambulance Request', ?, ?, datetime('now'))
           `,
-            [`Urgent ambulance request created - ${priority} priority`, adminId, requestId],
+            [adminId, `Urgent ambulance request created - ${priority} priority`, requestId],
           );
         });
       }
