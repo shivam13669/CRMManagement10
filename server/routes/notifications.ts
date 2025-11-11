@@ -17,10 +17,10 @@ export const handleGetNotifications: RequestHandler = async (req, res) => {
   try {
     const { role, userId } = (req as any).user;
 
-    if (role !== "admin" && role !== "staff") {
+    if (role !== "admin" && role !== "staff" && role !== "hospital") {
       return res
         .status(403)
-        .json({ error: "Only admin and staff can view notifications" });
+        .json({ error: "Only admin, staff, and hospital users can view notifications" });
     }
 
     const notifications: Notification[] = [];
