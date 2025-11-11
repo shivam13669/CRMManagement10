@@ -668,6 +668,18 @@ function ManageAdmins({
                                                 </span>
                                               </div>
                                             )}
+
+                                            {/* State and District (if available) */}
+                                            {(selectedUser.state || selectedUser.district) && (
+                                              <div className="flex items-center space-x-2">
+                                                <MapPin className="w-4 h-4 text-gray-400" />
+                                                <span>
+                                                  {selectedUser.state ? selectedUser.state : ''}
+                                                  {selectedUser.state && selectedUser.district ? ', ' : ''}
+                                                  {selectedUser.district ? selectedUser.district : ''}
+                                                </span>
+                                              </div>
+                                            )}
                                           </div>
                                         </div>
 
