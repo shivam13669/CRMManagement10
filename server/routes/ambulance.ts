@@ -671,14 +671,16 @@ export const handleForwardToHospital: RequestHandler = async (req, res) => {
   }
 };
 
-// Mark ambulance request as read by admin
+// Mark ambulance request as read by admin or hospital
 export const handleMarkAmbulanceAsRead: RequestHandler = async (req, res) => {
   try {
     const { role } = (req as any).user;
     const { requestId } = req.params;
 
-    if (role !== "admin") {
-      return res.status(403).json({ error: "Only admins can mark requests" });
+    if (role !== "admin" && role !== "hospital") {
+      return res
+        .status(403)
+        .json({ error: "Only admins and hospitals can mark requests as read" });
     }
 
     db.run(
@@ -892,6 +894,7 @@ export const handleGetHospitalForwardedRequests: RequestHandler = async (
         ar.assigned_ambulance_id,
         ar.created_at,
         ar.updated_at,
+        ar.is_read,
         u.full_name as patient_name,
         u.email as patient_email,
         u.phone as patient_phone,

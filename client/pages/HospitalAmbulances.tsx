@@ -4,7 +4,7 @@ import {
   Truck,
   Plus,
   Trash2,
-  Edit2,
+  SquarePen,
   MapPin,
   Phone,
   AlertCircle,
@@ -539,21 +539,20 @@ export default function HospitalAmbulances() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="flex-1 gap-1"
+                      className="p-2 h-auto text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleEdit(ambulance);
                       }}
                     >
-                      <Edit2 className="w-3 h-3" />
-                      Edit
+                      <SquarePen className="w-4 h-4" />
                     </Button>
 
                     {ambulance.status === "assigned" && (
                       <Button
                         size="sm"
                         variant="outline"
-                        className="flex-1 gap-1"
+                        className="p-2 h-auto"
                         disabled={parking === ambulance.id}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -561,18 +560,17 @@ export default function HospitalAmbulances() {
                         }}
                       >
                         {parking === ambulance.id ? (
-                          <Loader className="w-3 h-3 animate-spin" />
+                          <Loader className="w-4 h-4 animate-spin" />
                         ) : (
-                          <Pause className="w-3 h-3" />
+                          <Pause className="w-4 h-4" />
                         )}
-                        Park
                       </Button>
                     )}
 
                     <Button
                       size="sm"
                       variant="outline"
-                      className="flex-1 gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      className="p-2 h-auto text-red-600 hover:text-red-700 hover:bg-red-50"
                       disabled={deleting === ambulance.id}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -580,9 +578,9 @@ export default function HospitalAmbulances() {
                       }}
                     >
                       {deleting === ambulance.id ? (
-                        <Loader className="w-3 h-3 animate-spin" />
+                        <Loader className="w-4 h-4 animate-spin" />
                       ) : (
-                        <Trash2 className="w-3 h-3" />
+                        <Trash2 className="w-4 h-4" />
                       )}
                     </Button>
                   </div>
