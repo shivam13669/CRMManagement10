@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { authUtils } from "../lib/api";
+import { fetchWithAuth } from "../lib/fetchWithAuth";
 
 interface LayoutProps {
   children: React.ReactNode;
