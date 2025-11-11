@@ -573,16 +573,36 @@ export const handleForwardToHospital: RequestHandler = async (req, res) => {
     }
 
     // Forward the request
-    db.run(
-      `
-      UPDATE ambulance_requests
-      SET forwarded_to_hospital_id = ?, status = 'forwarded_to_hospital',
-          is_read = 0, hospital_response = 'pending',
-          updated_at = datetime('now')
-      WHERE id = ?
-    `,
-      [hospital_user_id, requestId],
-    );
+    try {
+      db.run(
+        `
+        UPDATE ambulance_requests
+        SET forwarded_to_hospital_id = ?, status = 'forwarded_to_hospital',
+            is_read = 0, hospital_response = 'pending',
+            updated_at = datetime('now')
+        WHERE id = ?
+      `,
+        [hospital_user_id, requestId],
+      );
+    } catch (updateErr) {
+      // If DB schema doesn't allow 'forwarded_to_hospital' status (old CHECK), fallback to safe status 'assigned'
+      console.warn('Forward update with special status failed, falling back to assigned:', updateErr && updateErr.message);
+      try {
+        db.run(
+          `
+          UPDATE ambulance_requests
+          SET forwarded_to_hospital_id = ?, status = 'assigned',
+              is_read = 0, hospital_response = 'pending',
+              updated_at = datetime('now')
+          WHERE id = ?
+        `,
+          [hospital_user_id, requestId],
+        );
+      } catch (fallbackErr) {
+        console.error('Fallback update also failed:', fallbackErr && fallbackErr.message);
+        return res.status(500).json({ error: 'Failed to forward request due to database schema issue' });
+      }
+    }
 
     // Create notification for hospital
     db.run(
