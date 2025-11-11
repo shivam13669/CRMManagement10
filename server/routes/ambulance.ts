@@ -48,13 +48,18 @@ export const handleCreateAmbulanceRequest: RequestHandler = async (
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Insert ambulance request
+    // Parse pickup address to extract state/district (if possible)
+    const parsedLocation = parseAddressForStateDistrict(pickup_address || "");
+    const customerState = parsedLocation.state;
+    const customerDistrict = parsedLocation.district;
+
+    // Insert ambulance request with extracted state/district
     db.run(
       `
       INSERT INTO ambulance_requests (
         customer_user_id, pickup_address, destination_address, emergency_type,
-        customer_condition, contact_number, priority, status, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', datetime('now'))
+        customer_condition, contact_number, priority, customer_state, customer_district, status, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', datetime('now'))
     `,
       [
         userId,
@@ -64,6 +69,8 @@ export const handleCreateAmbulanceRequest: RequestHandler = async (
         customer_condition || null,
         contact_number,
         priority,
+        customerState,
+        customerDistrict,
       ],
     );
 
@@ -71,43 +78,40 @@ export const handleCreateAmbulanceRequest: RequestHandler = async (
     const result = db.exec("SELECT last_insert_rowid() as id");
     const requestId = result[0].values[0][0];
 
-    // Get customer state from user profile
-    let customerState = null;
-    const userResult = db.exec(
-      `SELECT address FROM customers WHERE user_id = ?`,
-      [userId],
-    );
-
-    if (userResult.length > 0 && userResult[0].values.length > 0) {
-      // In a real app, you'd parse the address to get state
-      // For now, we'll update the request with state information from customer data
+    // Notify relevant admins: system admins (all requests) and state admins for this state
+    let adminResult: any;
+    if (customerState) {
+      adminResult = db.exec(
+        `SELECT id FROM users WHERE role = 'admin' AND (admin_type = 'system' OR (admin_type = 'state' AND state = ?))`,
+        [customerState],
+      );
+    } else {
+      // If no state could be parsed, notify only system admins
+      adminResult = db.exec(
+        `SELECT id FROM users WHERE role = 'admin' AND admin_type = 'system'`,
+      );
     }
 
-    // Create notification for admins about critical requests
-    if (priority === "critical" || priority === "high") {
-      const adminResult = db.exec(`SELECT id FROM users WHERE role = 'admin'`);
-
-      if (adminResult.length > 0 && adminResult[0].values.length > 0) {
-        const adminRows = adminResult[0].values;
-        adminRows.forEach((adminRow) => {
-          const adminId = adminRow[0];
-          db.run(
-            `
+    if (adminResult.length > 0 && adminResult[0].values.length > 0) {
+      const adminRows = adminResult[0].values;
+      adminRows.forEach((adminRow) => {
+        const adminId = adminRow[0];
+        db.run(
+          `
             INSERT INTO notifications (user_id, type, title, message, related_id, created_at)
-            VALUES (?, 'ambulance', 'Urgent Ambulance Request', ?, ?, datetime('now'))
+            VALUES (?, 'ambulance', 'Ambulance Request', ?, ?, datetime('now'))
           `,
-            [
-              adminId,
-              `Urgent ambulance request created - ${priority} priority`,
-              requestId,
-            ],
-          );
-        });
-      }
+          [
+            adminId,
+            `Ambulance request received${customerState ? ` - ${customerState}` : ''}`,
+            requestId,
+          ],
+        );
+      });
     }
 
     console.log(
-      `🚑 Ambulance request created: ID ${requestId} for user ${userId}`,
+      `🚑 Ambulance request created: ID ${requestId} for user ${userId} (state=${customerState})`,
     );
 
     res.status(201).json({
