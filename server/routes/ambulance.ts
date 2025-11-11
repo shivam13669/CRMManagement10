@@ -375,13 +375,19 @@ export const handleGetCustomerAmbulanceRequests: RequestHandler = async (
         ar.status,
         ar.priority,
         ar.assigned_staff_id,
+        ar.assigned_ambulance_id,
         ar.notes,
         ar.created_at,
         ar.updated_at,
         staff.full_name as assigned_staff_name,
-        staff.phone as assigned_staff_phone
+        staff.phone as assigned_staff_phone,
+        ha.registration_number as ambulance_registration,
+        ha.ambulance_type,
+        ha.driver_name as ambulance_driver_name,
+        ha.driver_phone as ambulance_driver_phone
       FROM ambulance_requests ar
       LEFT JOIN users staff ON ar.assigned_staff_id = staff.id
+      LEFT JOIN hospital_ambulances ha ON ar.assigned_ambulance_id = ha.id
       ORDER BY ar.created_at DESC
     `);
 
