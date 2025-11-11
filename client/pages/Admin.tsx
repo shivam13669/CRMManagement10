@@ -382,6 +382,26 @@ function ManageAdmins({
 }) {
   const currentUser = authUtils.getCurrentUser();
 
+  const [currentUserFull, setCurrentUserFull] = useState<any | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await fetchWithAuth("/api/auth/profile", { headers: { "Content-Type": "application/json" } });
+        if (res && res.ok) {
+          const json = await res.json();
+          if (mounted) setCurrentUserFull(json.user || null);
+        }
+      } catch (e) {
+        // ignore
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const [alert, setAlert] = useState<{
     type: "success" | "error";
     message: string;
