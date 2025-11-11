@@ -130,7 +130,8 @@ export default function AdminNotifications() {
           window.location.href = '/feedback-management';
           break;
         case 'ambulance':
-          window.location.href = '/ambulance';
+          // Navigate to ambulance management with the specific request highlighted
+          window.location.href = `/ambulance?requestId=${notification.relatedId}`;
           break;
         default:
           console.log('Notification clicked:', notification);
