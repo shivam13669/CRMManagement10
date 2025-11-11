@@ -707,7 +707,7 @@ function ManageAdmins({
                                       </div>
 
                                       <div className="flex flex-wrap gap-2 pt-4">
-                                        {currentUser?.admin_type === "system" && user?.admin_type === "state" ? (
+                                        {currentUserFull?.admin_type === "system" && selectedUser?.admin_type === "state" ? (
                                           <>
                                             <Button
                                               variant="outline"
