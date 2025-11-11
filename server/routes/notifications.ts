@@ -40,6 +40,91 @@ export const handleGetNotifications: RequestHandler = async (req, res) => {
       }
     }
 
+    // If the user is a hospital, return hospital-specific notifications only
+    if (role === "hospital") {
+      try {
+        // Direct notifications for hospital user
+        const directResult = db.exec(
+          `
+          SELECT id, type, title, message, is_read, related_id, created_at
+          FROM notifications
+          WHERE user_id = ?
+          ORDER BY created_at DESC
+          LIMIT 20
+        `,
+          [userId],
+        );
+
+        if (directResult.length > 0 && directResult[0].values.length > 0) {
+          const cols = directResult[0].columns;
+          const rows = directResult[0].values;
+          rows.forEach((row) => {
+            const n: any = {};
+            cols.forEach((col, idx) => (n[col] = row[idx]));
+            notifications.push({
+              id: `notification_${n.id}`,
+              type: n.type,
+              title: n.title,
+              message: n.message,
+              time: getTimeAgo(n.created_at),
+              unread: n.is_read === 0,
+              relatedId: n.related_id,
+              createdAt: n.created_at,
+            });
+          });
+        }
+
+        // Ambulance requests forwarded to this hospital
+        const forwarded = db.exec(
+          `
+          SELECT ar.id, ar.emergency_type, ar.priority, ar.status, ar.created_at, u.full_name as customer_name
+          FROM ambulance_requests ar
+          JOIN users u ON ar.customer_user_id = u.id
+          WHERE ar.forwarded_to_hospital_id = ?
+          ORDER BY ar.created_at DESC
+          LIMIT 10
+        `,
+          [userId],
+        );
+
+        if (forwarded.length > 0 && forwarded[0].values.length > 0) {
+          const cols = forwarded[0].columns;
+          const rows = forwarded[0].values;
+          rows.forEach((row) => {
+            const a: any = {};
+            cols.forEach((col, idx) => (a[col] = row[idx]));
+            const timeAgo = getTimeAgo(a.created_at);
+            const urgencyText =
+              a.priority === "critical" || a.priority === "high"
+                ? ` (${a.priority} priority)`
+                : "";
+            notifications.push({
+              id: `ambulance_${a.id}`,
+              type: "ambulance",
+              title: "Forwarded Ambulance Request",
+              message: `${a.customer_name} requested ambulance for ${a.emergency_type}${urgencyText}`,
+              time: timeAgo,
+              unread: a.status === "pending",
+              relatedId: a.id,
+              createdAt: a.created_at,
+            });
+          });
+        }
+
+        // Sort and return
+        notifications.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        const limitedNotifications = notifications.slice(0, 20);
+        return res.json({
+          notifications: limitedNotifications,
+          total: limitedNotifications.length,
+          unreadCount: limitedNotifications.filter((n) => n.unread).length,
+        });
+      } catch (err) {
+        console.error("Error fetching hospital notifications:", err);
+        return res.status(500).json({ error: "Internal server error while fetching notifications" });
+      }
+    }
+
     // Get recent appointments (last 24 hours)
     let appointmentsResult: any = [];
     try {
