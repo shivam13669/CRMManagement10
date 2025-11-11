@@ -1,0 +1,6 @@
+import "./global.css";
+import { createRoot } from "react-dom/client";
+import App from "./App";
+import "./lib/debug";
+
+createRoot(document.getElementById("root")!).render(<App />);
