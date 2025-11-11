@@ -131,10 +131,9 @@ export function Layout({ children }: LayoutProps) {
       const token = localStorage.getItem("authToken");
       if (!token) return;
 
-      const response = await fetch("/api/notifications/mark-all-read", {
+      const response = await fetchWithAuth("/api/notifications/mark-all-read", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
