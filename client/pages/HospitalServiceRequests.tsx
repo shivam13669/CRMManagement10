@@ -808,6 +808,127 @@ export default function HospitalServiceRequests() {
           </DialogContent>
         </Dialog>
 
+        {/* Ambulance Selection Modal */}
+        <Dialog
+          open={ambulanceSelectionOpen}
+          onOpenChange={setAmbulanceSelectionOpen}
+        >
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Select Ambulance</DialogTitle>
+              <DialogDescription>
+                Choose an ambulance to assign to this service request
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              {loadingAmbulances ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  <span className="ml-2 text-gray-600">
+                    Loading available ambulances...
+                  </span>
+                </div>
+              ) : availableAmbulances.length === 0 ? (
+                <div className="text-center py-8">
+                  <AlertTriangle className="w-12 h-12 text-yellow-500 mx-auto mb-2" />
+                  <p className="text-gray-900 font-semibold">
+                    No Available Ambulances
+                  </p>
+                  <p className="text-gray-600 text-sm mt-1">
+                    All ambulances are currently assigned to service requests.
+                    Please park an ambulance to accept this request.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-3 max-h-[400px] overflow-y-auto">
+                  {availableAmbulances.map((ambulance) => (
+                    <div
+                      key={ambulance.id}
+                      onClick={() => setSelectedAmbulance(ambulance.id)}
+                      className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                        selectedAmbulance === ambulance.id
+                          ? "border-green-500 bg-green-50"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-900">
+                            {ambulance.registration_number}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {ambulance.ambulance_type}
+                          </p>
+                          {ambulance.driver_name && (
+                            <p className="text-sm text-gray-600 mt-1">
+                              Driver: {ambulance.driver_name}
+                            </p>
+                          )}
+                          {ambulance.current_location && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              Location: {ambulance.current_location}
+                            </p>
+                          )}
+                        </div>
+                        <div
+                          className={`w-5 h-5 rounded border flex items-center justify-center ${
+                            selectedAmbulance === ambulance.id
+                              ? "bg-green-500 border-green-500"
+                              : "border-gray-300"
+                          }`}
+                        >
+                          {selectedAmbulance === ambulance.id && (
+                            <Check className="w-3 h-3 text-white" />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {availableAmbulances.length > 0 && (
+                <div>
+                  <label className="text-sm font-medium text-gray-700">
+                    Notes (Optional)
+                  </label>
+                  <Textarea
+                    placeholder="Enter any special instructions or notes..."
+                    value={responseNotes}
+                    onChange={(e) => setResponseNotes(e.target.value)}
+                    className="mt-2 min-h-[100px]"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setAmbulanceSelectionOpen(false);
+                  setSelectedAmbulance(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={submitResponse}
+                disabled={
+                  submittingResponse ||
+                  loadingAmbulances ||
+                  !selectedAmbulance ||
+                  availableAmbulances.length === 0
+                }
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {submittingResponse ? "Accepting..." : "Accept with Selected Ambulance"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         {/* Response Modal */}
         <Dialog open={responseModalOpen} onOpenChange={setResponseModalOpen}>
           <DialogContent className="max-w-md">
