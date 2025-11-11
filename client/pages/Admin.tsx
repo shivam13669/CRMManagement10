@@ -895,7 +895,7 @@ function ManageAdmins({
 
                               <DropdownMenuSeparator />
 
-                              {currentUser?.admin_type === "system" && user.admin_type === "state" ? (
+                              {currentUserFull?.admin_type === "system" && user.admin_type === "state" ? (
                                 <>
                                   <DropdownMenuItem
                                     onSelect={async (e) => {
