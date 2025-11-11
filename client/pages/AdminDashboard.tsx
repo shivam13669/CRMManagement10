@@ -23,6 +23,7 @@ import {
   CardTitle,
 } from "../components/ui/card";
 import { dataApi } from "../lib/api";
+import { fetchWithAuth } from "../lib/fetchWithAuth";
 
 interface DashboardData {
   customers: any[];
