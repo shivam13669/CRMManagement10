@@ -4,7 +4,7 @@ import {
   Truck,
   Plus,
   Trash2,
-  Edit2,
+  Pencil,
   MapPin,
   Phone,
   AlertCircle,
@@ -545,7 +545,7 @@ export default function HospitalAmbulances() {
                         handleEdit(ambulance);
                       }}
                     >
-                      <Edit2 className="w-4 h-4" />
+                      <Pencil className="w-4 h-4" />
                     </Button>
 
                     {ambulance.status === "assigned" && (
