@@ -182,8 +182,9 @@ export const handleGetAmbulanceRequests: RequestHandler = async (req, res) => {
         ar.is_read,
         ar.forwarded_to_hospital_id,
         ar.hospital_response,
-        ar.customer_state,
+          ar.customer_state,
         ar.customer_district,
+        ar.forwarded_to_hospital_id,
         ar.created_at,
         u.full_name as patient_name,
         u.email as patient_email,
@@ -192,11 +193,16 @@ export const handleGetAmbulanceRequests: RequestHandler = async (req, res) => {
         c.signup_lat as customer_signup_lat,
         c.signup_lng as customer_signup_lng,
         staff.full_name as assigned_staff_name,
-        staff.phone as assigned_staff_phone
+        staff.phone as assigned_staff_phone,
+        h2.hospital_name as forwarded_hospital_name,
+        h2.address as forwarded_hospital_address,
+        u2.full_name as forwarded_hospital_user_name
       FROM ambulance_requests ar
       JOIN users u ON ar.customer_user_id = u.id
       LEFT JOIN customers c ON u.id = c.user_id
       LEFT JOIN users staff ON ar.assigned_staff_id = staff.id
+      LEFT JOIN hospitals h2 ON ar.forwarded_to_hospital_id = h2.user_id
+      LEFT JOIN users u2 ON h2.user_id = u2.id
       ORDER BY ar.created_at DESC
     `);
     } catch (err) {
@@ -317,7 +323,7 @@ export const handleGetCustomerAmbulanceRequests: RequestHandler = async (
   res,
 ) => {
   try {
-    console.log("🔍 GET /api/ambulance/customer called");
+    console.log("���� GET /api/ambulance/customer called");
     console.log("   JWT Data:", (req as any).user);
 
     const { userId, role } = (req as any).user;
