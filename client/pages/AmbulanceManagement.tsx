@@ -346,7 +346,8 @@ export default function AmbulanceManagement() {
     statusFilter,
     priorityFilter,
     activeTab,
-    currentUser,
+    currentUser?.admin_type,
+    currentUser?.state,
   ]);
 
   const getStatusBadge = (status: string) => {
