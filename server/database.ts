@@ -1566,7 +1566,7 @@ export function getAdminUsers(): any[] {
   try {
     const result = db.exec(`
       SELECT u.id, u.username, u.email, u.role, u.full_name, u.phone,
-             u.status, u.created_at, u.updated_at
+             u.status, u.admin_type, u.state, u.district, u.created_at, u.updated_at
       FROM users u
       WHERE u.role = 'admin'
       ORDER BY u.created_at DESC
