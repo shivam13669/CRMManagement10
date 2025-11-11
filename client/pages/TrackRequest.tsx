@@ -88,6 +88,20 @@ export default function TrackRequest() {
   useEffect(() => {
     fetchRequests();
 
+    // Check if there's a requestId in the URL query params
+    const params = new URLSearchParams(window.location.search);
+    const requestId = params.get("requestId");
+
+    if (requestId) {
+      // When requests are loaded, find and select the specific request
+      setTimeout(() => {
+        const foundRequest = requests.find((r) => r.id === parseInt(requestId));
+        if (foundRequest) {
+          setSelectedRequest(foundRequest);
+        }
+      }, 500);
+    }
+
     // Set up auto-refresh every 30 seconds for real-time updates
     const interval = setInterval(() => {
       fetchRequests();
