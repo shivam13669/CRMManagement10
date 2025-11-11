@@ -469,6 +469,15 @@ function ManageAdmins({
     }
   };
 
+  const closeAllDropdowns = () => {
+    try {
+      const ev = new KeyboardEvent("keydown", { key: "Escape", bubbles: true });
+      document.dispatchEvent(ev);
+    } catch (e) {
+      // ignore
+    }
+  };
+
   const handleReactivateAdmin = async (userId: number, userName: string) => {
     try {
       const res = await fetch(`/api/admin/users/${userId}/reactivate`, {
@@ -479,6 +488,7 @@ function ManageAdmins({
         },
       });
       if (res.ok) {
+        closeAllDropdowns();
         setAlert({ type: "success", message: `${userName} has been reactivated` });
         fetchAdmins();
       } else {
@@ -759,8 +769,10 @@ function ManageAdmins({
                                                           const res = await fetchWithAuth(`/api/admin/users/${selectedUser.id}/suspend`, { method: "POST", headers: { "Content-Type": "application/json" } });
                                                           const json = await res.json();
                                                           if (res.ok) {
-                                                            setAlert({ type: "success", message: "Admin suspended" });
-                                                            fetchAdmins();
+                                                            closeAllDropdowns();
+                                                            closeAllDropdowns();
+                                                    setAlert({ type: "success", message: "Admin suspended" });
+                                                    fetchAdmins();
                                                           } else {
                                                             setAlert({ type: "error", message: json.error || "Failed to suspend admin" });
                                                           }
@@ -798,8 +810,10 @@ function ManageAdmins({
                                                           const res = await fetchWithAuth(`/api/admin/users/${selectedUser.id}`, { method: "DELETE", headers: { "Content-Type": "application/json" } });
                                                           const json = await res.json();
                                                           if (res.ok) {
-                                                            setAlert({ type: "success", message: "Admin deleted" });
-                                                            fetchAdmins();
+                                                            closeAllDropdowns();
+                                                            closeAllDropdowns();
+                                                    setAlert({ type: "success", message: "Admin deleted" });
+                                                    fetchAdmins();
                                                           } else {
                                                             setAlert({ type: "error", message: json.error || "Failed to delete admin" });
                                                           }
@@ -849,8 +863,10 @@ function ManageAdmins({
                                                           const res = await fetchWithAuth(`/api/admin/users/${selectedUser.id}`, { method: "DELETE", headers: { "Content-Type": "application/json" } });
                                                           const json = await res.json();
                                                           if (res.ok) {
-                                                            setAlert({ type: "success", message: "Admin deleted" });
-                                                            fetchAdmins();
+                                                            closeAllDropdowns();
+                                                            closeAllDropdowns();
+                                                    setAlert({ type: "success", message: "Admin deleted" });
+                                                    fetchAdmins();
                                                           } else {
                                                             setAlert({ type: "error", message: json.error || "Failed to delete admin" });
                                                           }
@@ -1016,8 +1032,10 @@ function ManageAdmins({
                                                 const res = await fetchWithAuth(`/api/admin/users/${user.id}/suspend`, { method: "POST", headers: { "Content-Type": "application/json" } });
                                                 const json = await res.json();
                                                 if (res.ok) {
-                                                  setAlert({ type: "success", message: "Admin suspended" });
-                                                  fetchAdmins();
+                                                  closeAllDropdowns();
+                                                            closeAllDropdowns();
+                                                    setAlert({ type: "success", message: "Admin suspended" });
+                                                    fetchAdmins();
                                                 } else {
                                                   setAlert({ type: "error", message: json.error || "Failed to suspend admin" });
                                                 }
@@ -1051,8 +1069,10 @@ function ManageAdmins({
                                                 const res = await fetchWithAuth(`/api/admin/users/${user.id}`, { method: "DELETE", headers: { "Content-Type": "application/json" } });
                                                 const json = await res.json();
                                                 if (res.ok) {
-                                                  setAlert({ type: "success", message: "Admin deleted" });
-                                                  fetchAdmins();
+                                                  closeAllDropdowns();
+                                                            closeAllDropdowns();
+                                                    setAlert({ type: "success", message: "Admin deleted" });
+                                                    fetchAdmins();
                                                 } else {
                                                   setAlert({ type: "error", message: json.error || "Failed to delete admin" });
                                                 }
@@ -1092,8 +1112,10 @@ function ManageAdmins({
                                                 const res = await fetchWithAuth(`/api/admin/users/${user.id}`, { method: "DELETE", headers: { "Content-Type": "application/json" } });
                                                 const json = await res.json();
                                                 if (res.ok) {
-                                                  setAlert({ type: "success", message: "Admin deleted" });
-                                                  fetchAdmins();
+                                                  closeAllDropdowns();
+                                                            closeAllDropdowns();
+                                                    setAlert({ type: "success", message: "Admin deleted" });
+                                                    fetchAdmins();
                                                 } else {
                                                   setAlert({ type: "error", message: json.error || "Failed to delete admin" });
                                                 }
