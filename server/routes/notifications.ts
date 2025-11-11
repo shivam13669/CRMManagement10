@@ -372,6 +372,55 @@ export const handleGetCustomerNotifications: RequestHandler = async (
 
     const notifications: Notification[] = [];
 
+    // Get customer's direct notifications (e.g., hospital responses)
+    let directNotificationsResult: any = [];
+    try {
+      directNotificationsResult = db.exec(
+        `
+        SELECT
+          id,
+          type,
+          title,
+          message,
+          is_read,
+          related_id,
+          created_at
+        FROM notifications
+        WHERE user_id = ?
+        ORDER BY created_at DESC
+        LIMIT 50
+      `,
+        [userId],
+      );
+    } catch (error) {
+      console.error("Error fetching direct notifications:", error);
+      directNotificationsResult = [];
+    }
+
+    if (directNotificationsResult.length > 0) {
+      const columns = directNotificationsResult[0].columns;
+      const rows = directNotificationsResult[0].values;
+
+      rows.forEach((row) => {
+        const notification: any = {};
+        columns.forEach((col, index) => {
+          notification[col] = row[index];
+        });
+
+        const timeAgo = getTimeAgo(notification.created_at);
+        notifications.push({
+          id: `notification_${notification.id}`,
+          type: notification.type,
+          title: notification.title,
+          message: notification.message,
+          time: timeAgo,
+          unread: notification.is_read === 0,
+          relatedId: notification.related_id,
+          createdAt: notification.created_at,
+        });
+      });
+    }
+
     // Get customer's ambulance requests (last 30 days)
     let ambulanceResult: any = [];
     try {
