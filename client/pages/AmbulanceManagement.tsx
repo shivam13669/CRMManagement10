@@ -77,6 +77,10 @@ interface AmbulanceRequest {
   customer_signup_address?: string;
   customer_signup_lat?: string;
   customer_signup_lng?: string;
+  // Added forwarded hospital display fields
+  forwarded_hospital_name?: string;
+  forwarded_hospital_address?: string;
+  forwarded_hospital_user_name?: string;
 }
 
 interface Hospital {
