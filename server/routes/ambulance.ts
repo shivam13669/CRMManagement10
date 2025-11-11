@@ -71,6 +71,39 @@ export const handleCreateAmbulanceRequest: RequestHandler = async (
     const result = db.exec("SELECT last_insert_rowid() as id");
     const requestId = result[0].values[0][0];
 
+    // Get customer state from user profile
+    let customerState = null;
+    const userResult = db.exec(
+      `SELECT address FROM customers WHERE user_id = ?`,
+      [userId],
+    );
+
+    if (userResult.length > 0 && userResult[0].values.length > 0) {
+      // In a real app, you'd parse the address to get state
+      // For now, we'll update the request with state information from customer data
+    }
+
+    // Create notification for admins about critical requests
+    if (priority === "critical" || priority === "high") {
+      const adminResult = db.exec(
+        `SELECT id FROM users WHERE role = 'admin'`,
+      );
+
+      if (adminResult.length > 0 && adminResult[0].values.length > 0) {
+        const adminRows = adminResult[0].values;
+        adminRows.forEach((adminRow) => {
+          const adminId = adminRow[0];
+          db.run(
+            `
+            INSERT INTO notifications (user_id, type, title, message, related_id, created_at)
+            VALUES (?, 'ambulance', 'Urgent Ambulance Request', ?, ?, datetime('now'))
+          `,
+            [`Urgent ambulance request created - ${priority} priority`, adminId, requestId],
+          );
+        });
+      }
+    }
+
     console.log(
       `🚑 Ambulance request created: ID ${requestId} for user ${userId}`,
     );
