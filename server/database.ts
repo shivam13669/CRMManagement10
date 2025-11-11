@@ -369,6 +369,30 @@ function createTables(): void {
       )
     `);
 
+    // Hospital ambulances table
+    db.run(`
+      CREATE TABLE IF NOT EXISTS hospital_ambulances (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        hospital_user_id INTEGER NOT NULL,
+        registration_number TEXT NOT NULL UNIQUE,
+        ambulance_type TEXT NOT NULL CHECK(ambulance_type IN ('Basic Life Support', 'Advanced Life Support', 'Ventilator Support')),
+        model TEXT,
+        manufacturer TEXT,
+        registration_year INTEGER,
+        driver_name TEXT,
+        driver_phone TEXT,
+        driver_license_number TEXT,
+        equipment TEXT,
+        status TEXT DEFAULT 'available' CHECK(status IN ('available', 'assigned', 'maintenance', 'parked')),
+        current_location TEXT,
+        assigned_request_id INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (hospital_user_id) REFERENCES users (id) ON DELETE CASCADE,
+        FOREIGN KEY (assigned_request_id) REFERENCES ambulance_requests (id) ON DELETE SET NULL
+      )
+    `);
+
     // Hospital reports
     db.run(`
       CREATE TABLE IF NOT EXISTS hospital_reports (
