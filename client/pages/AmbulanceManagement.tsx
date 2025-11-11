@@ -1108,6 +1108,70 @@ export default function AmbulanceManagement() {
                       </div>
                     )}
 
+                  {/* Assigned Ambulance Details */}
+                  {selectedRequest.ambulance_registration && (
+                    <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                      <div className="flex items-center space-x-2 mb-3">
+                        <Truck className="w-5 h-5 text-green-600" />
+                        <span className="font-semibold text-green-900">
+                          Assigned Ambulance Details
+                        </span>
+                      </div>
+                      <div className="space-y-2">
+                        <div>
+                          <span className="font-medium text-green-800">
+                            Registration Number:{" "}
+                          </span>
+                          <span className="text-green-700 font-semibold">
+                            {selectedRequest.ambulance_registration}
+                          </span>
+                        </div>
+                        {selectedRequest.ambulance_type && (
+                          <div>
+                            <span className="font-medium text-green-800">
+                              Ambulance Type:{" "}
+                            </span>
+                            <span className="text-green-700">
+                              {selectedRequest.ambulance_type}
+                            </span>
+                          </div>
+                        )}
+                        {selectedRequest.ambulance_driver_name && (
+                          <div>
+                            <span className="font-medium text-green-800">
+                              Driver Name:{" "}
+                            </span>
+                            <span className="text-green-700">
+                              {selectedRequest.ambulance_driver_name}
+                            </span>
+                          </div>
+                        )}
+                        {selectedRequest.ambulance_driver_phone && (
+                          <div>
+                            <span className="font-medium text-green-800">
+                              Driver Phone:{" "}
+                            </span>
+                            <span className="text-green-700">
+                              {selectedRequest.ambulance_driver_phone}
+                            </span>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-6 px-2 text-xs ml-2"
+                              onClick={() =>
+                                window.open(
+                                  `tel:${selectedRequest.ambulance_driver_phone}`,
+                                )
+                              }
+                            >
+                              Call
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Forward to Hospital Button */}
                   {!selectedRequest.forwarded_to_hospital_id &&
                     selectedRequest.status === "pending" && (
