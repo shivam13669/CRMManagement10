@@ -539,7 +539,7 @@ export default function HospitalAmbulances() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="p-2 h-auto"
+                      className="p-2 h-auto text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleEdit(ambulance);
