@@ -49,9 +49,37 @@ export const handleCreateAmbulanceRequest: RequestHandler = async (
     }
 
     // Parse pickup address to extract state/district (if possible)
-    const parsedLocation = parseAddressForStateDistrict(pickup_address || "");
-    const customerState = parsedLocation.state;
-    const customerDistrict = parsedLocation.district;
+    const latLngRegex = /^\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*$/;
+    let customerState: string | null = null;
+    let customerDistrict: string | null = null;
+
+    if (pickup_address && latLngRegex.test(pickup_address)) {
+      // If pickup_address is coordinates, reverse geocode using Nominatim
+      try {
+        const [lat, lng] = pickup_address.split(",").map((v: string) => v.trim());
+        const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(
+          lat,
+        )}&lon=${encodeURIComponent(lng)}&addressdetails=1`;
+        const res = await fetch(url, { headers: { "User-Agent": "Healthcare-App/1.0" } });
+        if (res.ok) {
+          const data = await res.json();
+          const display = data.display_name || "";
+          const parsed = parseAddressForStateDistrict(display);
+          customerState = parsed.state;
+          customerDistrict = parsed.district;
+          // Optionally replace pickup_address with readable display name
+          // but keep original coords as well; for now we keep original value
+        } else {
+          console.warn("Reverse geocode failed with status", res.status);
+        }
+      } catch (err) {
+        console.error("Reverse geocode error:", err);
+      }
+    } else {
+      const parsedLocation = parseAddressForStateDistrict(pickup_address || "");
+      customerState = parsedLocation.state;
+      customerDistrict = parsedLocation.district;
+    }
 
     // Insert ambulance request with extracted state/district
     db.run(
