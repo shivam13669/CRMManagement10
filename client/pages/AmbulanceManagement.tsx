@@ -1019,7 +1019,29 @@ export default function AmbulanceManagement() {
                     )}
                   </div>
 
-                  {/* Hospital Response */}
+                  {/* Forwarded Hospital Info (show when forwarded_to_hospital_id exists) */}
+                  {selectedRequest.forwarded_to_hospital_id && (
+                    <div className="bg-purple-50 p-4 rounded-lg mb-3">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Hospital className="w-5 h-5 text-purple-600" />
+                        <span className="font-semibold text-purple-900">
+                          Forwarded To
+                        </span>
+                      </div>
+                      <div className="ml-6">
+                        <div className="font-medium text-purple-800">
+                          {selectedRequest.forwarded_hospital_name || selectedRequest.forwarded_hospital_user_name || 'Hospital'}
+                        </div>
+                        {selectedRequest.forwarded_hospital_address && (
+                          <div className="text-purple-700 text-sm">
+                            {selectedRequest.forwarded_hospital_address}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Hospital Response (status/notes) */}
                   {selectedRequest.forwarded_to_hospital_id &&
                     selectedRequest.hospital_response && (
                       <div className="bg-purple-50 p-4 rounded-lg">
