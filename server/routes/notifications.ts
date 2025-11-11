@@ -20,7 +20,9 @@ export const handleGetNotifications: RequestHandler = async (req, res) => {
     if (role !== "admin" && role !== "staff" && role !== "hospital") {
       return res
         .status(403)
-        .json({ error: "Only admin, staff, and hospital users can view notifications" });
+        .json({
+          error: "Only admin, staff, and hospital users can view notifications",
+        });
     }
 
     const notifications: Notification[] = [];
@@ -124,11 +126,9 @@ export const handleGetNotifications: RequestHandler = async (req, res) => {
         });
       } catch (err) {
         console.error("Error fetching hospital notifications:", err);
-        return res
-          .status(500)
-          .json({
-            error: "Internal server error while fetching notifications",
-          });
+        return res.status(500).json({
+          error: "Internal server error while fetching notifications",
+        });
       }
     }
 
