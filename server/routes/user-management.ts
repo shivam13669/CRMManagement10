@@ -343,6 +343,32 @@ export const handleDeleteUser: RequestHandler = async (req, res) => {
       return res.status(400).json({ error: "Invalid user ID" });
     }
 
+    const targetUser = getUserById(userIdNum);
+    if (!targetUser) {
+      return res.status(404).json({ error: "Target user not found" });
+    }
+
+    // If target is an admin, only system admins can delete state admins
+    if (targetUser.role === "admin") {
+      const caller = (req as any).user;
+      const callerUser = getUserByEmail(caller.email);
+      if (!callerUser || callerUser.admin_type !== "system") {
+        return res.status(403).json({ error: "Only system admins can delete admin accounts" });
+      }
+
+      // Prevent deleting system admins
+      if (targetUser.admin_type === "system") {
+        return res.status(403).json({ error: "Cannot delete system administrator" });
+      }
+
+      const success = await deleteAdminById(userIdNum);
+      if (success) {
+        return res.json({ message: "Admin deleted successfully", userId: userIdNum, action: "deleted" });
+      }
+
+      return res.status(500).json({ error: "Failed to delete admin user" });
+    }
+
     const success = await deleteUser(userIdNum);
 
     if (success) {
