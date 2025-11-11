@@ -42,6 +42,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../components/ui/dialog";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../components/ui/tabs";
 import { toast } from "sonner";
 import { Textarea } from "../components/ui/textarea";
 
@@ -61,6 +67,7 @@ interface ForwardedRequest {
   patient_name: string;
   patient_email: string;
   patient_phone: string;
+  is_read?: number;
 }
 
 export default function HospitalServiceRequests() {
@@ -73,6 +80,7 @@ export default function HospitalServiceRequests() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
+  const [activeTab, setActiveTab] = useState<"all" | "unread">("all");
   const [selectedRequest, setSelectedRequest] =
     useState<ForwardedRequest | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -121,6 +129,32 @@ export default function HospitalServiceRequests() {
     } finally {
       setLoading(false);
       if (showRefreshing) setRefreshing(false);
+    }
+  };
+
+  const markAsRead = async (requestId: number) => {
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) return;
+
+      const response = await fetch(
+        `/api/ambulance/${requestId}/mark-read`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      if (response.ok) {
+        setRequests((prev) =>
+          prev.map((r) => (r.id === requestId ? { ...r, is_read: 1 } : r)),
+        );
+      }
+    } catch (error) {
+      console.error("Error marking as read:", error);
     }
   };
 
@@ -239,6 +273,11 @@ export default function HospitalServiceRequests() {
   useEffect(() => {
     let filtered = requests;
 
+    // Filter by unread/all
+    if (activeTab === "unread") {
+      filtered = filtered.filter((r) => !r.is_read);
+    }
+
     if (searchTerm) {
       filtered = filtered.filter(
         (request) =>
@@ -268,7 +307,7 @@ export default function HospitalServiceRequests() {
     }
 
     setFilteredRequests(filtered);
-  }, [requests, searchTerm, statusFilter, priorityFilter]);
+  }, [requests, searchTerm, statusFilter, priorityFilter, activeTab]);
 
   const getResponseBadge = (response: string) => {
     switch (response) {
@@ -354,6 +393,7 @@ export default function HospitalServiceRequests() {
   // Get summary statistics
   const stats = {
     total: requests.length,
+    unread: requests.filter((r) => !r.is_read).length,
     pending: requests.filter((r) => r.hospital_response === "pending").length,
     accepted: requests.filter((r) => r.hospital_response === "accepted").length,
     rejected: requests.filter((r) => r.hospital_response === "rejected").length,
@@ -513,84 +553,186 @@ export default function HospitalServiceRequests() {
           </CardContent>
         </Card>
 
-        {/* Requests List */}
-        {filteredRequests.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <Truck className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                {requests.length === 0
-                  ? "No Service Requests"
-                  : "No Matching Requests"}
-              </h3>
-              <p className="text-gray-600">
-                {requests.length === 0
-                  ? "No ambulance requests have been forwarded to your hospital yet."
-                  : "No requests match your current filters."}
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredRequests.map((request) => (
-              <div
-                key={request.id}
-                onClick={() => {
-                  setSelectedRequest(request);
-                  setModalOpen(true);
-                }}
-                className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer"
-              >
-                <div className="mb-3">
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-semibold text-gray-900">
-                      Request #{request.id}
-                    </h3>
-                    <div className="flex gap-2">
-                      {getPriorityBadge(request.priority)}
-                      {getResponseBadge(request.hospital_response)}
+        {/* Tabs */}
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as "all" | "unread")}
+        >
+          <TabsList>
+            <TabsTrigger value="all">
+              All Requests ({requests.length})
+            </TabsTrigger>
+            <TabsTrigger value="unread">
+              Unread Requests ({stats.unread})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="all" className="mt-6">
+            {filteredRequests.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <Truck className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    {requests.length === 0
+                      ? "No Service Requests"
+                      : "No Matching Requests"}
+                  </h3>
+                  <p className="text-gray-600">
+                    {requests.length === 0
+                      ? "No ambulance requests have been forwarded to your hospital yet."
+                      : "No requests match your current filters."}
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredRequests.map((request) => (
+                  <div
+                    key={request.id}
+                    onClick={() => {
+                      setSelectedRequest(request);
+                      setModalOpen(true);
+                      markAsRead(request.id);
+                    }}
+                    className={`border rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer ${
+                      !request.is_read
+                        ? "bg-blue-50 border-blue-300"
+                        : "bg-white border-gray-200"
+                    }`}
+                  >
+                    <div className="mb-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="font-semibold text-gray-900">
+                          Request #{request.id}
+                        </h3>
+                        <div className="flex gap-2">
+                          {getPriorityBadge(request.priority)}
+                          {getResponseBadge(request.hospital_response)}
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        {request.emergency_type}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {getTimeAgo(request.created_at)}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center space-x-2">
+                        <Users className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                        <span className="text-gray-700 truncate">
+                          {request.patient_name}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Phone className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                        <span className="text-gray-700">
+                          {request.contact_number}
+                        </span>
+                      </div>
+
+                      <div className="flex items-start space-x-2">
+                        <MapPin className="w-4 h-4 text-gray-500 flex-shrink-0 mt-0.5" />
+                        <span className="text-gray-600 line-clamp-2">
+                          {request.pickup_address}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                      <p className="text-xs text-gray-500">
+                        {formatDateTime(request.created_at)}
+                      </p>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-600">
-                    {request.emergency_type}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {getTimeAgo(request.created_at)}
-                  </p>
-                </div>
-
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center space-x-2">
-                    <Users className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                    <span className="text-gray-700 truncate">
-                      {request.patient_name}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Phone className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                    <span className="text-gray-700">
-                      {request.contact_number}
-                    </span>
-                  </div>
-
-                  <div className="flex items-start space-x-2">
-                    <MapPin className="w-4 h-4 text-gray-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-600 line-clamp-2">
-                      {request.pickup_address}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-3 pt-3 border-t border-gray-200">
-                  <p className="text-xs text-gray-500">
-                    {formatDateTime(request.created_at)}
-                  </p>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
+            )}
+          </TabsContent>
+
+          <TabsContent value="unread" className="mt-6">
+            {filteredRequests.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <Truck className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    {requests.filter((r) => !r.is_read).length === 0
+                      ? "No Unread Requests"
+                      : "No Matching Unread Requests"}
+                  </h3>
+                  <p className="text-gray-600">
+                    {requests.filter((r) => !r.is_read).length === 0
+                      ? "You have read all service requests."
+                      : "No unread requests match your current filters."}
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredRequests.map((request) => (
+                  <div
+                    key={request.id}
+                    onClick={() => {
+                      setSelectedRequest(request);
+                      setModalOpen(true);
+                      markAsRead(request.id);
+                    }}
+                    className="bg-blue-50 border border-blue-300 rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer"
+                  >
+                    <div className="mb-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="font-semibold text-gray-900">
+                          Request #{request.id}
+                        </h3>
+                        <div className="flex gap-2">
+                          {getPriorityBadge(request.priority)}
+                          {getResponseBadge(request.hospital_response)}
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        {request.emergency_type}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {getTimeAgo(request.created_at)}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center space-x-2">
+                        <Users className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                        <span className="text-gray-700 truncate">
+                          {request.patient_name}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Phone className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                        <span className="text-gray-700">
+                          {request.contact_number}
+                        </span>
+                      </div>
+
+                      <div className="flex items-start space-x-2">
+                        <MapPin className="w-4 h-4 text-gray-500 flex-shrink-0 mt-0.5" />
+                        <span className="text-gray-600 line-clamp-2">
+                          {request.pickup_address}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                      <p className="text-xs text-gray-500">
+                        {formatDateTime(request.created_at)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
 
         {/* Details Modal */}
         <Dialog
