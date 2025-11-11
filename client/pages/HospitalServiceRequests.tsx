@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Layout } from "../components/Layout";
+import { HospitalLayout } from "../components/HospitalLayout";
 import {
   Truck,
   Clock,
@@ -296,19 +296,19 @@ export default function HospitalServiceRequests() {
 
   if (loading) {
     return (
-      <Layout>
+      <HospitalLayout>
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           <span className="ml-2 text-gray-600">
             Loading service requests...
           </span>
         </div>
-      </Layout>
+      </HospitalLayout>
     );
   }
 
   return (
-    <Layout>
+    <HospitalLayout>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -798,6 +798,6 @@ export default function HospitalServiceRequests() {
           </DialogContent>
         </Dialog>
       </div>
-    </Layout>
+    </HospitalLayout>
   );
 }

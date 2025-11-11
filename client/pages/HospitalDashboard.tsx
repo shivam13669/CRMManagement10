@@ -66,7 +66,9 @@ export default function HospitalDashboard() {
     },
     {
       title: "Departments",
-      value: hospitalData?.departments ? hospitalData.departments.split(",").length : 0,
+      value: hospitalData?.departments
+        ? hospitalData.departments.split(",").length
+        : 0,
       icon: BarChart3,
       color: "bg-green-100 text-green-600",
     },
@@ -135,7 +137,9 @@ export default function HospitalDashboard() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-500">Hospital Name</p>
-                  <p className="text-lg font-semibold">{hospitalData.hospital_name}</p>
+                  <p className="text-lg font-semibold">
+                    {hospitalData.hospital_name}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Hospital Type</p>
@@ -145,7 +149,9 @@ export default function HospitalDashboard() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Address</p>
-                  <p className="text-lg font-semibold">{hospitalData.address}</p>
+                  <p className="text-lg font-semibold">
+                    {hospitalData.address}
+                  </p>
                 </div>
                 <div className="flex items-start gap-2">
                   <div>
@@ -155,19 +161,20 @@ export default function HospitalDashboard() {
                       {hospitalData.phone_number || "Not provided"}
                     </p>
                   </div>
-                  {hospitalData.google_map_enabled && hospitalData.google_map_link && (
-                    <Button
-                      onClick={() =>
-                        window.open(hospitalData.google_map_link, "_blank")
-                      }
-                      variant="outline"
-                      size="sm"
-                      className="mt-6"
-                    >
-                      <MapPin className="w-4 h-4 mr-2" />
-                      View Map
-                    </Button>
-                  )}
+                  {hospitalData.google_map_enabled &&
+                    hospitalData.google_map_link && (
+                      <Button
+                        onClick={() =>
+                          window.open(hospitalData.google_map_link, "_blank")
+                        }
+                        variant="outline"
+                        size="sm"
+                        className="mt-6"
+                      >
+                        <MapPin className="w-4 h-4 mr-2" />
+                        View Map
+                      </Button>
+                    )}
                 </div>
                 {hospitalData.license_number && (
                   <div>
@@ -194,7 +201,9 @@ export default function HospitalDashboard() {
                       <p className="text-sm text-gray-600">{stat.title}</p>
                       <p className="text-3xl font-bold mt-2">{stat.value}</p>
                     </div>
-                    <div className={`flex items-center justify-center w-12 h-12 rounded-full ${stat.color}`}>
+                    <div
+                      className={`flex items-center justify-center w-12 h-12 rounded-full ${stat.color}`}
+                    >
                       <IconComponent className="w-6 h-6" />
                     </div>
                   </div>
@@ -220,7 +229,9 @@ export default function HospitalDashboard() {
                 >
                   <CardContent className="pt-6">
                     <div className="flex flex-col items-center text-center gap-2">
-                      <div className={`flex items-center justify-center w-12 h-12 rounded-full ${action.color} text-white mb-3`}>
+                      <div
+                        className={`flex items-center justify-center w-12 h-12 rounded-full ${action.color} text-white mb-3`}
+                      >
                         <IconComponent className="w-6 h-6" />
                       </div>
                       <h3 className="font-semibold text-gray-900">
@@ -241,7 +252,9 @@ export default function HospitalDashboard() {
         <Card className="rounded-2xl shadow-md bg-white">
           <CardHeader>
             <CardTitle>Hospital Status</CardTitle>
-            <CardDescription>Overview of your hospital operations</CardDescription>
+            <CardDescription>
+              Overview of your hospital operations
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -252,7 +265,9 @@ export default function HospitalDashboard() {
                   </div>
                   <div>
                     <p className="font-medium text-gray-900">System Status</p>
-                    <p className="text-sm text-gray-600">All systems operational</p>
+                    <p className="text-sm text-gray-600">
+                      All systems operational
+                    </p>
                   </div>
                 </div>
                 <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full">
