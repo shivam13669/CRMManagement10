@@ -372,7 +372,7 @@ export default function HospitalAmbulances() {
               resetForm();
               setCreateDialogOpen(true);
             }}
-            className="flex items-center gap-2 bg-red-600 hover:bg-red-700"
+            className="flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
             Add Ambulance
@@ -447,7 +447,7 @@ export default function HospitalAmbulances() {
                   resetForm();
                   setCreateDialogOpen(true);
                 }}
-                className="flex items-center gap-2 bg-red-600 hover:bg-red-700 mx-auto"
+                className="flex items-center gap-2 mx-auto"
               >
                 <Plus className="w-4 h-4" />
                 Add Ambulance
@@ -783,7 +783,6 @@ export default function HospitalAmbulances() {
               <Button
                 onClick={handleCreateAmbulance}
                 disabled={submitting}
-                className="bg-red-600 hover:bg-red-700"
               >
                 {submitting ? "Creating..." : "Create Ambulance"}
               </Button>
@@ -982,7 +981,6 @@ export default function HospitalAmbulances() {
               <Button
                 onClick={handleUpdateAmbulance}
                 disabled={submitting}
-                className="bg-red-600 hover:bg-red-700"
               >
                 {submitting ? "Updating..." : "Update Ambulance"}
               </Button>
