@@ -1408,6 +1408,63 @@ export async function reactivateUser(userId: number): Promise<boolean> {
   }
 }
 
+// Admin-specific operations allowing system admins to manage state admin accounts
+export async function suspendAdminById(userId: number): Promise<boolean> {
+  try {
+    db.run(
+      `
+      UPDATE users
+      SET status = 'suspended', updated_at = datetime('now')
+      WHERE id = ?
+    `,
+      [userId],
+    );
+
+    saveDatabase();
+    console.log(`✅ Admin ${userId} suspended successfully`);
+    return true;
+  } catch (error) {
+    console.error("❌ Error suspending admin:", error);
+    return false;
+  }
+}
+
+export async function reactivateAdminById(userId: number): Promise<boolean> {
+  try {
+    db.run(
+      `
+      UPDATE users
+      SET status = 'active', updated_at = datetime('now')
+      WHERE id = ?
+    `,
+      [userId],
+    );
+
+    saveDatabase();
+    console.log(`✅ Admin ${userId} reactivated successfully`);
+    return true;
+  } catch (error) {
+    console.error("❌ Error reactivating admin:", error);
+    return false;
+  }
+}
+
+export async function deleteAdminById(userId: number): Promise<boolean> {
+  try {
+    // Delete related records first (customers/doctors entries should not exist for admins but keep for safety)
+    db.run("DELETE FROM customers WHERE user_id = ?", [userId]);
+    db.run("DELETE FROM doctors WHERE user_id = ?", [userId]);
+
+    db.run("DELETE FROM users WHERE id = ?", [userId]);
+    saveDatabase();
+    console.log(`✅ Admin ${userId} deleted successfully`);
+    return true;
+  } catch (error) {
+    console.error("❌ Error deleting admin:", error);
+    return false;
+  }
+}
+
 export async function deleteUser(userId: number): Promise<boolean> {
   try {
     console.log(`���️ Deleting user ID: ${userId}`);
