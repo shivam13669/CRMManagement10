@@ -4,7 +4,7 @@ import {
   Truck,
   Plus,
   Trash2,
-  Pencil,
+  SquarePen,
   MapPin,
   Phone,
   AlertCircle,
@@ -545,7 +545,7 @@ export default function HospitalAmbulances() {
                         handleEdit(ambulance);
                       }}
                     >
-                      <Pencil className="w-4 h-4" />
+                      <SquarePen className="w-4 h-4" />
                     </Button>
 
                     {ambulance.status === "assigned" && (
