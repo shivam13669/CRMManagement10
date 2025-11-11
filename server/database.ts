@@ -1854,7 +1854,7 @@ export function getAllHospitals(): any[] {
   }
 }
 
-function parseAddressForStateDistrict(address: string): {
+export function parseAddressForStateDistrict(address: string): {
   state: string | null;
   district: string | null;
 } {
