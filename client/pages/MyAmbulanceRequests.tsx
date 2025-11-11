@@ -559,6 +559,71 @@ export default function MyAmbulanceRequests() {
                     </>
                   )}
 
+                  {/* Assigned Ambulance (if available) */}
+                  {request.ambulance_registration && (
+                    <>
+                      <Separator />
+                      <div className="bg-red-50 p-3 rounded-lg">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <Truck className="w-4 h-4 text-red-600" />
+                          <span className="font-medium text-red-900">
+                            Assigned Ambulance
+                          </span>
+                        </div>
+                        <div className="space-y-2">
+                          <div>
+                            <span className="font-medium text-red-800">
+                              Registration:{" "}
+                            </span>
+                            <span className="text-red-700">
+                              {request.ambulance_registration}
+                            </span>
+                          </div>
+                          {request.ambulance_type && (
+                            <div>
+                              <span className="font-medium text-red-800">
+                                Type:{" "}
+                              </span>
+                              <span className="text-red-700">
+                                {request.ambulance_type}
+                              </span>
+                            </div>
+                          )}
+                          {request.ambulance_driver_name && (
+                            <div>
+                              <span className="font-medium text-red-800">
+                                Driver:{" "}
+                              </span>
+                              <span className="text-red-700">
+                                {request.ambulance_driver_name}
+                              </span>
+                            </div>
+                          )}
+                          {request.ambulance_driver_phone && (
+                            <div className="flex items-center space-x-2">
+                              <Phone className="w-3 h-3 text-red-600" />
+                              <span className="text-red-700 text-sm">
+                                {request.ambulance_driver_phone}
+                              </span>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-6 px-2 text-xs"
+                                onClick={() =>
+                                  window.open(
+                                    `tel:${request.ambulance_driver_phone}`,
+                                  )
+                                }
+                              >
+                                Call
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
+
                   {/* Status Progress */}
                   <div className="mt-4">
                     <div className="flex flex-wrap items-center gap-2">
