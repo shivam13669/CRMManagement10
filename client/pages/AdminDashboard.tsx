@@ -23,6 +23,7 @@ import {
   CardTitle,
 } from "../components/ui/card";
 import { dataApi } from "../lib/api";
+import { fetchWithAuth } from "../lib/fetchWithAuth";
 
 interface DashboardData {
   customers: any[];
@@ -64,36 +65,12 @@ export default function AdminDashboard() {
         ambulanceRes,
         feedbackRes,
       ] = await Promise.all([
-        fetch("/api/customers", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-          },
-        }),
-        fetch("/api/doctors", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-          },
-        }),
-        fetch("/api/admin/users/staff", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-          },
-        }),
-        fetch("/api/appointments", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-          },
-        }),
-        fetch("/api/ambulance", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-          },
-        }),
-        fetch("/api/admin/feedback", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-          },
-        }),
+        fetchWithAuth("/api/customers", {}),
+        fetchWithAuth("/api/doctors", {}),
+        fetchWithAuth("/api/admin/users/staff", {}),
+        fetchWithAuth("/api/appointments", {}),
+        fetchWithAuth("/api/ambulance", {}),
+        fetchWithAuth("/api/admin/feedback", {}),
       ]);
 
       const customers = customersRes.ok

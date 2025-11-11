@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Layout } from "../components/Layout";
 import { StateAdminLayout } from "../components/StateAdminLayout";
 import { authUtils } from "../lib/api";
+import { fetchWithAuth } from "../lib/fetchWithAuth";
 import {
   Truck,
   Clock,
@@ -162,9 +163,8 @@ export default function AmbulanceManagement() {
         return;
       }
 
-      const response = await fetch("/api/ambulance", {
+      const response = await fetchWithAuth("/api/ambulance", {
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
@@ -195,12 +195,14 @@ export default function AmbulanceManagement() {
 
       if (!token || !stateToUse) return;
 
-      const response = await fetch(`/api/hospitals/by-state/${stateToUse}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+      const response = await fetchWithAuth(
+        `/api/hospitals/by-state/${stateToUse}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
         },
-      });
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -347,7 +349,8 @@ export default function AmbulanceManagement() {
     statusFilter,
     priorityFilter,
     activeTab,
-    currentUser,
+    currentUser?.admin_type,
+    currentUser?.state,
   ]);
 
   const getStatusBadge = (status: string) => {

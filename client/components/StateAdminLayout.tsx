@@ -31,11 +31,10 @@ interface Notification {
   createdAt: string;
 }
 
-const sidebarItems = [
-  { icon: Activity, label: "Dashboard", path: "/admin-dashboard" },
-  { icon: Truck, label: "Ambulance Management", path: "/ambulance-management" },
-  { icon: Building2, label: "Hospital Management", path: "/hospital-management" },
-];
+import { sidebarItems as ALL_SIDEBAR_ITEMS } from "./Layout";
+
+// For state admins, show the same sidebar but hide system-only admin items
+const sidebarItems = ALL_SIDEBAR_ITEMS.filter((item) => !item.adminOnly);
 
 export function StateAdminLayout({ children }: StateAdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);

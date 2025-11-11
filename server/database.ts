@@ -549,10 +549,7 @@ async function runMigrations(): Promise<void> {
         console.log("✅ admin_type column added successfully");
       }
     } catch (error) {
-      console.log(
-        "⚠️ admin_type column migration skipped:",
-        error.message,
-      );
+      console.log("⚠️ admin_type column migration skipped:", error.message);
     }
 
     // Migration 7: Add signup_lat and signup_lng columns to customers table
@@ -563,7 +560,9 @@ async function runMigrations(): Promise<void> {
       );
 
       if (!hasSignupLat) {
-        console.log("📝 Adding signup_lat and signup_lng columns to customers table...");
+        console.log(
+          "📝 Adding signup_lat and signup_lng columns to customers table...",
+        );
         db.run("ALTER TABLE customers ADD COLUMN signup_lat TEXT");
         db.run("ALTER TABLE customers ADD COLUMN signup_lng TEXT");
         console.log("✅ Signup location columns added successfully");
@@ -1321,7 +1320,7 @@ export function rejectPendingRegistration(
 
     return true;
   } catch (error) {
-    console.error("❌ Error rejecting registration:", error);
+    console.error("�� Error rejecting registration:", error);
     return false;
   }
 }
@@ -1404,6 +1403,63 @@ export async function reactivateUser(userId: number): Promise<boolean> {
     return true;
   } catch (error) {
     console.error("❌ Error reactivating user:", error);
+    return false;
+  }
+}
+
+// Admin-specific operations allowing system admins to manage state admin accounts
+export async function suspendAdminById(userId: number): Promise<boolean> {
+  try {
+    db.run(
+      `
+      UPDATE users
+      SET status = 'suspended', updated_at = datetime('now')
+      WHERE id = ?
+    `,
+      [userId],
+    );
+
+    saveDatabase();
+    console.log(`✅ Admin ${userId} suspended successfully`);
+    return true;
+  } catch (error) {
+    console.error("❌ Error suspending admin:", error);
+    return false;
+  }
+}
+
+export async function reactivateAdminById(userId: number): Promise<boolean> {
+  try {
+    db.run(
+      `
+      UPDATE users
+      SET status = 'active', updated_at = datetime('now')
+      WHERE id = ?
+    `,
+      [userId],
+    );
+
+    saveDatabase();
+    console.log(`✅ Admin ${userId} reactivated successfully`);
+    return true;
+  } catch (error) {
+    console.error("❌ Error reactivating admin:", error);
+    return false;
+  }
+}
+
+export async function deleteAdminById(userId: number): Promise<boolean> {
+  try {
+    // Delete related records first (customers/doctors entries should not exist for admins but keep for safety)
+    db.run("DELETE FROM customers WHERE user_id = ?", [userId]);
+    db.run("DELETE FROM doctors WHERE user_id = ?", [userId]);
+
+    db.run("DELETE FROM users WHERE id = ?", [userId]);
+    saveDatabase();
+    console.log(`✅ Admin ${userId} deleted successfully`);
+    return true;
+  } catch (error) {
+    console.error("❌ Error deleting admin:", error);
     return false;
   }
 }
@@ -1509,7 +1565,7 @@ export function getAdminUsers(): any[] {
   try {
     const result = db.exec(`
       SELECT u.id, u.username, u.email, u.role, u.full_name, u.phone,
-             u.status, u.created_at, u.updated_at
+             u.status, u.admin_type, u.state, u.district, u.created_at, u.updated_at
       FROM users u
       WHERE u.role = 'admin'
       ORDER BY u.created_at DESC
@@ -1532,6 +1588,40 @@ export function getAdminUsers(): any[] {
   } catch (error) {
     console.error("❌ Error getting admin users:", error);
     return [];
+  }
+}
+
+export function setAdminTypeByEmail(
+  email: string,
+  adminType: "system" | "state" | null,
+): boolean {
+  try {
+    if (!db) {
+      console.error("❌ Database not initialized");
+      return false;
+    }
+
+    const user = getUserByEmail(email);
+    if (!user) {
+      console.error(`❌ User not found for email: ${email}`);
+      return false;
+    }
+
+    db.run(
+      `
+      UPDATE users
+      SET admin_type = ?, updated_at = datetime('now')
+      WHERE email = ?
+    `,
+      [adminType, email],
+    );
+
+    saveDatabase();
+    console.log(`✅ Updated admin_type for ${email} -> ${adminType}`);
+    return true;
+  } catch (error) {
+    console.error("❌ Error setting admin_type:", error);
+    return false;
   }
 }
 

@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { authUtils } from "../lib/api";
+import { fetchWithAuth } from "../lib/fetchWithAuth";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -35,7 +36,7 @@ interface SidebarItem {
   adminOnly?: boolean;
 }
 
-const sidebarItems: SidebarItem[] = [
+export const sidebarItems: SidebarItem[] = [
   { icon: Activity, label: "Dashboard", path: "/admin-dashboard" },
   { icon: Layers, label: "Admin Management", path: "/admin", adminOnly: true },
   { icon: Users, label: "Customers", path: "/customers" },
@@ -83,6 +84,28 @@ export function Layout({ children }: LayoutProps) {
     const token = localStorage.getItem("authToken");
     if (!token) {
       window.location.href = "/login";
+    } else {
+      // Fetch full profile to get admin_type/state and persist locally
+      (async () => {
+        try {
+          const res = await fetchWithAuth("/api/auth/profile", {
+            headers: { "Content-Type": "application/json" },
+          });
+          if (res && res.ok) {
+            const json = await res.json();
+            const user = json.user || {};
+            if (user.admin_type)
+              localStorage.setItem("admin_type", user.admin_type);
+            if (user.state) localStorage.setItem("state", user.state);
+            // Force re-render by updating state
+            setNotifications([]);
+            // restore notifications after profile fetch
+            fetchNotifications();
+          }
+        } catch (e) {
+          // ignore
+        }
+      })();
     }
   }, []);
 
@@ -93,9 +116,8 @@ export function Layout({ children }: LayoutProps) {
       const token = localStorage.getItem("authToken");
       if (!token) return;
 
-      const response = await fetch("/api/notifications", {
+      const response = await fetchWithAuth("/api/notifications", {
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
@@ -132,10 +154,9 @@ export function Layout({ children }: LayoutProps) {
       const token = localStorage.getItem("authToken");
       if (!token) return;
 
-      const response = await fetch("/api/notifications/mark-all-read", {
+      const response = await fetchWithAuth("/api/notifications/mark-all-read", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
@@ -157,10 +178,9 @@ export function Layout({ children }: LayoutProps) {
       if (notification.unread) {
         const token = localStorage.getItem("authToken");
         if (token) {
-          await fetch(`/api/notifications/${notification.id}/read`, {
+          await fetchWithAuth(`/api/notifications/${notification.id}/read`, {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
           });
@@ -254,8 +274,17 @@ export function Layout({ children }: LayoutProps) {
               <User className="w-5 h-5 text-white" />
             </div>
             <div>
-              <div className="font-medium text-gray-900">Admin</div>
-              <div className="text-sm text-primary">Administrator</div>
+              <div className="font-medium text-gray-900">
+                {currentUser?.userName || "Admin"}
+              </div>
+              <div className="text-sm text-primary">
+                {currentUser?.admin_type === "state"
+                  ? "State Admin"
+                  : currentUser?.role
+                    ? currentUser.role.charAt(0).toUpperCase() +
+                      currentUser.role.slice(1)
+                    : "Administrator"}
+              </div>
             </div>
           </div>
         </div>
@@ -264,7 +293,10 @@ export function Layout({ children }: LayoutProps) {
           <nav className="mt-6">
             {sidebarItems
               .filter(
-                (item) => !item.adminOnly || currentUser?.role === "admin",
+                (item) =>
+                  !item.adminOnly ||
+                  (currentUser?.role === "admin" &&
+                    currentUser?.admin_type === "system"),
               )
               .map((item) => {
                 const isActive = location.pathname === item.path;

@@ -37,7 +37,10 @@ export default function Login() {
       let response = await authApi.login(loginData);
 
       // If regular login fails, try hospital login
-      if (response.error && response.error.includes("Invalid email or password")) {
+      if (
+        response.error &&
+        response.error.includes("Invalid email or password")
+      ) {
         response = await authApi.hospitalLogin(loginData);
       }
 
@@ -66,7 +69,10 @@ export default function Login() {
 
         // Store hospital name if hospital login
         if (response.data.hospital) {
-          localStorage.setItem("hospitalName", response.data.hospital.hospital_name);
+          localStorage.setItem(
+            "hospitalName",
+            response.data.hospital.hospital_name,
+          );
         }
 
         // Navigate based on role
