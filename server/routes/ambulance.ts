@@ -889,13 +889,19 @@ export const handleGetHospitalForwardedRequests: RequestHandler = async (
         ar.hospital_response,
         ar.hospital_response_notes,
         ar.hospital_response_date,
+        ar.assigned_ambulance_id,
         ar.created_at,
         ar.updated_at,
         u.full_name as patient_name,
         u.email as patient_email,
-        u.phone as patient_phone
+        u.phone as patient_phone,
+        ha.registration_number as ambulance_registration,
+        ha.ambulance_type,
+        ha.driver_name as ambulance_driver_name,
+        ha.driver_phone as ambulance_driver_phone
       FROM ambulance_requests ar
       JOIN users u ON ar.customer_user_id = u.id
+      LEFT JOIN hospital_ambulances ha ON ar.assigned_ambulance_id = ha.id
       WHERE ar.forwarded_to_hospital_id = ?
       ORDER BY ar.created_at DESC
     `,
