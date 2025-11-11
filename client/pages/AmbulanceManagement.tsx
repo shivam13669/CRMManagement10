@@ -195,11 +195,14 @@ export default function AmbulanceManagement() {
 
       if (!token || !stateToUse) return;
 
-      const response = await fetchWithAuth(`/api/hospitals/by-state/${stateToUse}`, {
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetchWithAuth(
+        `/api/hospitals/by-state/${stateToUse}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
         },
-      });
+      );
 
       if (response.ok) {
         const data = await response.json();

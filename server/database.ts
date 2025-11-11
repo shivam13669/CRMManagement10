@@ -549,10 +549,7 @@ async function runMigrations(): Promise<void> {
         console.log("✅ admin_type column added successfully");
       }
     } catch (error) {
-      console.log(
-        "⚠️ admin_type column migration skipped:",
-        error.message,
-      );
+      console.log("⚠️ admin_type column migration skipped:", error.message);
     }
 
     // Migration 7: Add signup_lat and signup_lng columns to customers table
@@ -563,7 +560,9 @@ async function runMigrations(): Promise<void> {
       );
 
       if (!hasSignupLat) {
-        console.log("📝 Adding signup_lat and signup_lng columns to customers table...");
+        console.log(
+          "📝 Adding signup_lat and signup_lng columns to customers table...",
+        );
         db.run("ALTER TABLE customers ADD COLUMN signup_lat TEXT");
         db.run("ALTER TABLE customers ADD COLUMN signup_lng TEXT");
         console.log("✅ Signup location columns added successfully");
@@ -1592,7 +1591,10 @@ export function getAdminUsers(): any[] {
   }
 }
 
-export function setAdminTypeByEmail(email: string, adminType: "system" | "state" | null): boolean {
+export function setAdminTypeByEmail(
+  email: string,
+  adminType: "system" | "state" | null,
+): boolean {
   try {
     if (!db) {
       console.error("❌ Database not initialized");

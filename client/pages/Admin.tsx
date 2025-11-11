@@ -197,7 +197,9 @@ export default function AdminPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Admin Management</h1>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Admin Management
+            </h1>
             <p className="text-gray-600 mt-2">Create and manage admin users</p>
           </div>
           <div className="flex items-center space-x-3">
@@ -237,9 +239,7 @@ export default function AdminPage() {
         </div>
 
         {/* Create Admin Tab */}
-        {activeTab === "create" && (
-          <CreateAdminUser />
-        )}
+        {activeTab === "create" && <CreateAdminUser />}
 
         {/* Manage Admins Tab */}
         {activeTab === "manage" && (
@@ -327,7 +327,10 @@ export default function AdminPage() {
                     <PopoverContent className="w-48">
                       <div className="space-y-3">
                         <label className="text-sm font-medium">Status</label>
-                        <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <Select
+                          value={statusFilter}
+                          onValueChange={setStatusFilter}
+                        >
                           <SelectTrigger className="w-full">
                             <SelectValue />
                           </SelectTrigger>
@@ -389,7 +392,9 @@ function ManageAdmins({
     let mounted = true;
     (async () => {
       try {
-        const res = await fetchWithAuth("/api/auth/profile", { headers: { "Content-Type": "application/json" } });
+        const res = await fetchWithAuth("/api/auth/profile", {
+          headers: { "Content-Type": "application/json" },
+        });
         if (res && res.ok) {
           const json = await res.json();
           if (mounted) setCurrentUserFull(json.user || null);
@@ -489,11 +494,17 @@ function ManageAdmins({
       });
       if (res.ok) {
         closeAllDropdowns();
-        setAlert({ type: "success", message: `${userName} has been reactivated` });
+        setAlert({
+          type: "success",
+          message: `${userName} has been reactivated`,
+        });
         fetchAdmins();
       } else {
         const json = await res.json().catch(() => ({}));
-        setAlert({ type: "error", message: json.error || "Failed to reactivate admin" });
+        setAlert({
+          type: "error",
+          message: json.error || "Failed to reactivate admin",
+        });
       }
     } catch (e) {
       setAlert({ type: "error", message: "Network error" });
@@ -739,9 +750,12 @@ function ManageAdmins({
                                       </div>
 
                                       <div className="flex flex-wrap gap-2 pt-4">
-                                        {currentUserFull?.admin_type === "system" && selectedUser?.admin_type === "state" ? (
+                                        {currentUserFull?.admin_type ===
+                                          "system" &&
+                                        selectedUser?.admin_type === "state" ? (
                                           <>
-                                            {selectedUser?.status === "active" ? (
+                                            {selectedUser?.status ===
+                                            "active" ? (
                                               <>
                                                 <AlertDialog>
                                                   <AlertDialogTrigger asChild>
@@ -756,30 +770,71 @@ function ManageAdmins({
                                                   </AlertDialogTrigger>
                                                   <AlertDialogContent>
                                                     <AlertDialogHeader>
-                                                      <AlertDialogTitle>Suspend Admin</AlertDialogTitle>
+                                                      <AlertDialogTitle>
+                                                        Suspend Admin
+                                                      </AlertDialogTitle>
                                                       <AlertDialogDescription>
-                                                        Are you sure you want to suspend {selectedUser?.full_name}? They will not be able to access their account until reactivated.
+                                                        Are you sure you want to
+                                                        suspend{" "}
+                                                        {
+                                                          selectedUser?.full_name
+                                                        }
+                                                        ? They will not be able
+                                                        to access their account
+                                                        until reactivated.
                                                       </AlertDialogDescription>
                                                     </AlertDialogHeader>
                                                     <AlertDialogFooter>
-                                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                      <AlertDialogAction onClick={async () => {
-                                                        if (!selectedUser) return;
-                                                        try {
-                                                          const res = await fetchWithAuth(`/api/admin/users/${selectedUser.id}/suspend`, { method: "POST", headers: { "Content-Type": "application/json" } });
-                                                          const json = await res.json();
-                                                          if (res.ok) {
-                                                            closeAllDropdowns();
-                                                            closeAllDropdowns();
-                                                    setAlert({ type: "success", message: "Admin suspended" });
-                                                    fetchAdmins();
-                                                          } else {
-                                                            setAlert({ type: "error", message: json.error || "Failed to suspend admin" });
+                                                      <AlertDialogCancel>
+                                                        Cancel
+                                                      </AlertDialogCancel>
+                                                      <AlertDialogAction
+                                                        onClick={async () => {
+                                                          if (!selectedUser)
+                                                            return;
+                                                          try {
+                                                            const res =
+                                                              await fetchWithAuth(
+                                                                `/api/admin/users/${selectedUser.id}/suspend`,
+                                                                {
+                                                                  method:
+                                                                    "POST",
+                                                                  headers: {
+                                                                    "Content-Type":
+                                                                      "application/json",
+                                                                  },
+                                                                },
+                                                              );
+                                                            const json =
+                                                              await res.json();
+                                                            if (res.ok) {
+                                                              closeAllDropdowns();
+                                                              closeAllDropdowns();
+                                                              setAlert({
+                                                                type: "success",
+                                                                message:
+                                                                  "Admin suspended",
+                                                              });
+                                                              fetchAdmins();
+                                                            } else {
+                                                              setAlert({
+                                                                type: "error",
+                                                                message:
+                                                                  json.error ||
+                                                                  "Failed to suspend admin",
+                                                              });
+                                                            }
+                                                          } catch (e) {
+                                                            setAlert({
+                                                              type: "error",
+                                                              message:
+                                                                "Network error",
+                                                            });
                                                           }
-                                                        } catch (e) {
-                                                          setAlert({ type: "error", message: "Network error" });
-                                                        }
-                                                      }}>Suspend</AlertDialogAction>
+                                                        }}
+                                                      >
+                                                        Suspend
+                                                      </AlertDialogAction>
                                                     </AlertDialogFooter>
                                                   </AlertDialogContent>
                                                 </AlertDialog>
@@ -797,30 +852,72 @@ function ManageAdmins({
                                                   </AlertDialogTrigger>
                                                   <AlertDialogContent>
                                                     <AlertDialogHeader>
-                                                      <AlertDialogTitle>Delete Admin</AlertDialogTitle>
+                                                      <AlertDialogTitle>
+                                                        Delete Admin
+                                                      </AlertDialogTitle>
                                                       <AlertDialogDescription>
-                                                        Warning: This action cannot be undone. This will permanently delete {selectedUser?.full_name}'s account and remove all of their data from our servers.
+                                                        Warning: This action
+                                                        cannot be undone. This
+                                                        will permanently delete{" "}
+                                                        {
+                                                          selectedUser?.full_name
+                                                        }
+                                                        's account and remove
+                                                        all of their data from
+                                                        our servers.
                                                       </AlertDialogDescription>
                                                     </AlertDialogHeader>
                                                     <AlertDialogFooter>
-                                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                      <AlertDialogAction onClick={async () => {
-                                                        if (!selectedUser) return;
-                                                        try {
-                                                          const res = await fetchWithAuth(`/api/admin/users/${selectedUser.id}`, { method: "DELETE", headers: { "Content-Type": "application/json" } });
-                                                          const json = await res.json();
-                                                          if (res.ok) {
-                                                            closeAllDropdowns();
-                                                            closeAllDropdowns();
-                                                    setAlert({ type: "success", message: "Admin deleted" });
-                                                    fetchAdmins();
-                                                          } else {
-                                                            setAlert({ type: "error", message: json.error || "Failed to delete admin" });
+                                                      <AlertDialogCancel>
+                                                        Cancel
+                                                      </AlertDialogCancel>
+                                                      <AlertDialogAction
+                                                        onClick={async () => {
+                                                          if (!selectedUser)
+                                                            return;
+                                                          try {
+                                                            const res =
+                                                              await fetchWithAuth(
+                                                                `/api/admin/users/${selectedUser.id}`,
+                                                                {
+                                                                  method:
+                                                                    "DELETE",
+                                                                  headers: {
+                                                                    "Content-Type":
+                                                                      "application/json",
+                                                                  },
+                                                                },
+                                                              );
+                                                            const json =
+                                                              await res.json();
+                                                            if (res.ok) {
+                                                              closeAllDropdowns();
+                                                              closeAllDropdowns();
+                                                              setAlert({
+                                                                type: "success",
+                                                                message:
+                                                                  "Admin deleted",
+                                                              });
+                                                              fetchAdmins();
+                                                            } else {
+                                                              setAlert({
+                                                                type: "error",
+                                                                message:
+                                                                  json.error ||
+                                                                  "Failed to delete admin",
+                                                              });
+                                                            }
+                                                          } catch (e) {
+                                                            setAlert({
+                                                              type: "error",
+                                                              message:
+                                                                "Network error",
+                                                            });
                                                           }
-                                                        } catch (e) {
-                                                          setAlert({ type: "error", message: "Network error" });
-                                                        }
-                                                      }}>Delete Permanently</AlertDialogAction>
+                                                        }}
+                                                      >
+                                                        Delete Permanently
+                                                      </AlertDialogAction>
                                                     </AlertDialogFooter>
                                                   </AlertDialogContent>
                                                 </AlertDialog>
@@ -831,7 +928,13 @@ function ManageAdmins({
                                                   variant="outline"
                                                   size="sm"
                                                   className="flex-1 sm:flex-none"
-                                                  onClick={() => selectedUser && handleReactivateAdmin(selectedUser.id, selectedUser.full_name)}
+                                                  onClick={() =>
+                                                    selectedUser &&
+                                                    handleReactivateAdmin(
+                                                      selectedUser.id,
+                                                      selectedUser.full_name,
+                                                    )
+                                                  }
                                                 >
                                                   <Shield className="w-4 h-4 mr-2" />
                                                   Reactivate Admin
@@ -850,30 +953,72 @@ function ManageAdmins({
                                                   </AlertDialogTrigger>
                                                   <AlertDialogContent>
                                                     <AlertDialogHeader>
-                                                      <AlertDialogTitle>Delete Admin</AlertDialogTitle>
+                                                      <AlertDialogTitle>
+                                                        Delete Admin
+                                                      </AlertDialogTitle>
                                                       <AlertDialogDescription>
-                                                        Warning: This action cannot be undone. This will permanently delete {selectedUser?.full_name}'s account and remove all of their data from our servers.
+                                                        Warning: This action
+                                                        cannot be undone. This
+                                                        will permanently delete{" "}
+                                                        {
+                                                          selectedUser?.full_name
+                                                        }
+                                                        's account and remove
+                                                        all of their data from
+                                                        our servers.
                                                       </AlertDialogDescription>
                                                     </AlertDialogHeader>
                                                     <AlertDialogFooter>
-                                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                      <AlertDialogAction onClick={async () => {
-                                                        if (!selectedUser) return;
-                                                        try {
-                                                          const res = await fetchWithAuth(`/api/admin/users/${selectedUser.id}`, { method: "DELETE", headers: { "Content-Type": "application/json" } });
-                                                          const json = await res.json();
-                                                          if (res.ok) {
-                                                            closeAllDropdowns();
-                                                            closeAllDropdowns();
-                                                    setAlert({ type: "success", message: "Admin deleted" });
-                                                    fetchAdmins();
-                                                          } else {
-                                                            setAlert({ type: "error", message: json.error || "Failed to delete admin" });
+                                                      <AlertDialogCancel>
+                                                        Cancel
+                                                      </AlertDialogCancel>
+                                                      <AlertDialogAction
+                                                        onClick={async () => {
+                                                          if (!selectedUser)
+                                                            return;
+                                                          try {
+                                                            const res =
+                                                              await fetchWithAuth(
+                                                                `/api/admin/users/${selectedUser.id}`,
+                                                                {
+                                                                  method:
+                                                                    "DELETE",
+                                                                  headers: {
+                                                                    "Content-Type":
+                                                                      "application/json",
+                                                                  },
+                                                                },
+                                                              );
+                                                            const json =
+                                                              await res.json();
+                                                            if (res.ok) {
+                                                              closeAllDropdowns();
+                                                              closeAllDropdowns();
+                                                              setAlert({
+                                                                type: "success",
+                                                                message:
+                                                                  "Admin deleted",
+                                                              });
+                                                              fetchAdmins();
+                                                            } else {
+                                                              setAlert({
+                                                                type: "error",
+                                                                message:
+                                                                  json.error ||
+                                                                  "Failed to delete admin",
+                                                              });
+                                                            }
+                                                          } catch (e) {
+                                                            setAlert({
+                                                              type: "error",
+                                                              message:
+                                                                "Network error",
+                                                            });
                                                           }
-                                                        } catch (e) {
-                                                          setAlert({ type: "error", message: "Network error" });
-                                                        }
-                                                      }}>Delete Permanently</AlertDialogAction>
+                                                        }}
+                                                      >
+                                                        Delete Permanently
+                                                      </AlertDialogAction>
                                                     </AlertDialogFooter>
                                                   </AlertDialogContent>
                                                 </AlertDialog>
@@ -898,8 +1043,8 @@ function ManageAdmins({
                                                   </div>
                                                 </TooltipTrigger>
                                                 <TooltipContent>
-                                                  Suspending administrators is not
-                                                  allowed
+                                                  Suspending administrators is
+                                                  not allowed
                                                 </TooltipContent>
                                               </Tooltip>
                                             </TooltipProvider>
@@ -1006,43 +1151,82 @@ function ManageAdmins({
 
                               <DropdownMenuSeparator />
 
-                              {currentUserFull?.admin_type === "system" && user.admin_type === "state" ? (
+                              {currentUserFull?.admin_type === "system" &&
+                              user.admin_type === "state" ? (
                                 <>
                                   {user.status === "active" ? (
                                     <>
                                       <AlertDialog>
                                         <AlertDialogTrigger asChild>
                                           <div>
-                                            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); }}>
-                                              <ShieldOff className="w-4 h-4 mr-2" /> Suspend Admin
+                                            <DropdownMenuItem
+                                              onSelect={(e) => {
+                                                e.preventDefault();
+                                              }}
+                                            >
+                                              <ShieldOff className="w-4 h-4 mr-2" />{" "}
+                                              Suspend Admin
                                             </DropdownMenuItem>
                                           </div>
                                         </AlertDialogTrigger>
                                         <AlertDialogContent>
                                           <AlertDialogHeader>
-                                            <AlertDialogTitle>Suspend Admin</AlertDialogTitle>
+                                            <AlertDialogTitle>
+                                              Suspend Admin
+                                            </AlertDialogTitle>
                                             <AlertDialogDescription>
-                                              Are you sure you want to suspend {user.full_name}? They will not be able to access their account until reactivated.
+                                              Are you sure you want to suspend{" "}
+                                              {user.full_name}? They will not be
+                                              able to access their account until
+                                              reactivated.
                                             </AlertDialogDescription>
                                           </AlertDialogHeader>
                                           <AlertDialogFooter>
-                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                            <AlertDialogAction onClick={async () => {
-                                              try {
-                                                const res = await fetchWithAuth(`/api/admin/users/${user.id}/suspend`, { method: "POST", headers: { "Content-Type": "application/json" } });
-                                                const json = await res.json();
-                                                if (res.ok) {
-                                                  closeAllDropdowns();
-                                                            closeAllDropdowns();
-                                                    setAlert({ type: "success", message: "Admin suspended" });
+                                            <AlertDialogCancel>
+                                              Cancel
+                                            </AlertDialogCancel>
+                                            <AlertDialogAction
+                                              onClick={async () => {
+                                                try {
+                                                  const res =
+                                                    await fetchWithAuth(
+                                                      `/api/admin/users/${user.id}/suspend`,
+                                                      {
+                                                        method: "POST",
+                                                        headers: {
+                                                          "Content-Type":
+                                                            "application/json",
+                                                        },
+                                                      },
+                                                    );
+                                                  const json = await res.json();
+                                                  if (res.ok) {
+                                                    closeAllDropdowns();
+                                                    closeAllDropdowns();
+                                                    setAlert({
+                                                      type: "success",
+                                                      message:
+                                                        "Admin suspended",
+                                                    });
                                                     fetchAdmins();
-                                                } else {
-                                                  setAlert({ type: "error", message: json.error || "Failed to suspend admin" });
+                                                  } else {
+                                                    setAlert({
+                                                      type: "error",
+                                                      message:
+                                                        json.error ||
+                                                        "Failed to suspend admin",
+                                                    });
+                                                  }
+                                                } catch (e) {
+                                                  setAlert({
+                                                    type: "error",
+                                                    message: "Network error",
+                                                  });
                                                 }
-                                              } catch (e) {
-                                                setAlert({ type: "error", message: "Network error" });
-                                              }
-                                            }}>Suspend</AlertDialogAction>
+                                              }}
+                                            >
+                                              Suspend
+                                            </AlertDialogAction>
                                           </AlertDialogFooter>
                                         </AlertDialogContent>
                                       </AlertDialog>
@@ -1050,79 +1234,166 @@ function ManageAdmins({
                                       <AlertDialog>
                                         <AlertDialogTrigger asChild>
                                           <div>
-                                            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); }} className="text-red-600 focus:text-red-600">
-                                              <Trash2 className="w-4 h-4 mr-2" /> Delete Admin
+                                            <DropdownMenuItem
+                                              onSelect={(e) => {
+                                                e.preventDefault();
+                                              }}
+                                              className="text-red-600 focus:text-red-600"
+                                            >
+                                              <Trash2 className="w-4 h-4 mr-2" />{" "}
+                                              Delete Admin
                                             </DropdownMenuItem>
                                           </div>
                                         </AlertDialogTrigger>
                                         <AlertDialogContent>
                                           <AlertDialogHeader>
-                                            <AlertDialogTitle>Delete Admin</AlertDialogTitle>
+                                            <AlertDialogTitle>
+                                              Delete Admin
+                                            </AlertDialogTitle>
                                             <AlertDialogDescription>
-                                              Warning: This action cannot be undone. This will permanently delete {user.full_name}'s account and remove all of their data from our servers.
+                                              Warning: This action cannot be
+                                              undone. This will permanently
+                                              delete {user.full_name}'s account
+                                              and remove all of their data from
+                                              our servers.
                                             </AlertDialogDescription>
                                           </AlertDialogHeader>
                                           <AlertDialogFooter>
-                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                            <AlertDialogAction onClick={async () => {
-                                              try {
-                                                const res = await fetchWithAuth(`/api/admin/users/${user.id}`, { method: "DELETE", headers: { "Content-Type": "application/json" } });
-                                                const json = await res.json();
-                                                if (res.ok) {
-                                                  closeAllDropdowns();
-                                                            closeAllDropdowns();
-                                                    setAlert({ type: "success", message: "Admin deleted" });
+                                            <AlertDialogCancel>
+                                              Cancel
+                                            </AlertDialogCancel>
+                                            <AlertDialogAction
+                                              onClick={async () => {
+                                                try {
+                                                  const res =
+                                                    await fetchWithAuth(
+                                                      `/api/admin/users/${user.id}`,
+                                                      {
+                                                        method: "DELETE",
+                                                        headers: {
+                                                          "Content-Type":
+                                                            "application/json",
+                                                        },
+                                                      },
+                                                    );
+                                                  const json = await res.json();
+                                                  if (res.ok) {
+                                                    closeAllDropdowns();
+                                                    closeAllDropdowns();
+                                                    setAlert({
+                                                      type: "success",
+                                                      message: "Admin deleted",
+                                                    });
                                                     fetchAdmins();
-                                                } else {
-                                                  setAlert({ type: "error", message: json.error || "Failed to delete admin" });
+                                                  } else {
+                                                    setAlert({
+                                                      type: "error",
+                                                      message:
+                                                        json.error ||
+                                                        "Failed to delete admin",
+                                                    });
+                                                  }
+                                                } catch (e) {
+                                                  setAlert({
+                                                    type: "error",
+                                                    message: "Network error",
+                                                  });
                                                 }
-                                              } catch (e) {
-                                                setAlert({ type: "error", message: "Network error" });
-                                              }
-                                            }}>Delete Permanently</AlertDialogAction>
+                                              }}
+                                            >
+                                              Delete Permanently
+                                            </AlertDialogAction>
                                           </AlertDialogFooter>
                                         </AlertDialogContent>
                                       </AlertDialog>
                                     </>
                                   ) : (
                                     <>
-                                      <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleReactivateAdmin(user.id, user.full_name); }}>
-                                        <Shield className="w-4 h-4 mr-2" /> Reactivate Admin
+                                      <DropdownMenuItem
+                                        onSelect={(e) => {
+                                          e.preventDefault();
+                                          handleReactivateAdmin(
+                                            user.id,
+                                            user.full_name,
+                                          );
+                                        }}
+                                      >
+                                        <Shield className="w-4 h-4 mr-2" />{" "}
+                                        Reactivate Admin
                                       </DropdownMenuItem>
 
                                       <AlertDialog>
                                         <AlertDialogTrigger asChild>
                                           <div>
-                                            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); }} className="text-red-600 focus:text-red-600">
-                                              <Trash2 className="w-4 h-4 mr-2" /> Delete Admin
+                                            <DropdownMenuItem
+                                              onSelect={(e) => {
+                                                e.preventDefault();
+                                              }}
+                                              className="text-red-600 focus:text-red-600"
+                                            >
+                                              <Trash2 className="w-4 h-4 mr-2" />{" "}
+                                              Delete Admin
                                             </DropdownMenuItem>
                                           </div>
                                         </AlertDialogTrigger>
                                         <AlertDialogContent>
                                           <AlertDialogHeader>
-                                            <AlertDialogTitle>Delete Admin</AlertDialogTitle>
+                                            <AlertDialogTitle>
+                                              Delete Admin
+                                            </AlertDialogTitle>
                                             <AlertDialogDescription>
-                                              Warning: This action cannot be undone. This will permanently delete {user.full_name}'s account and remove all of their data from our servers.
+                                              Warning: This action cannot be
+                                              undone. This will permanently
+                                              delete {user.full_name}'s account
+                                              and remove all of their data from
+                                              our servers.
                                             </AlertDialogDescription>
                                           </AlertDialogHeader>
                                           <AlertDialogFooter>
-                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                            <AlertDialogAction onClick={async () => {
-                                              try {
-                                                const res = await fetchWithAuth(`/api/admin/users/${user.id}`, { method: "DELETE", headers: { "Content-Type": "application/json" } });
-                                                const json = await res.json();
-                                                if (res.ok) {
-                                                  closeAllDropdowns();
-                                                            closeAllDropdowns();
-                                                    setAlert({ type: "success", message: "Admin deleted" });
+                                            <AlertDialogCancel>
+                                              Cancel
+                                            </AlertDialogCancel>
+                                            <AlertDialogAction
+                                              onClick={async () => {
+                                                try {
+                                                  const res =
+                                                    await fetchWithAuth(
+                                                      `/api/admin/users/${user.id}`,
+                                                      {
+                                                        method: "DELETE",
+                                                        headers: {
+                                                          "Content-Type":
+                                                            "application/json",
+                                                        },
+                                                      },
+                                                    );
+                                                  const json = await res.json();
+                                                  if (res.ok) {
+                                                    closeAllDropdowns();
+                                                    closeAllDropdowns();
+                                                    setAlert({
+                                                      type: "success",
+                                                      message: "Admin deleted",
+                                                    });
                                                     fetchAdmins();
-                                                } else {
-                                                  setAlert({ type: "error", message: json.error || "Failed to delete admin" });
+                                                  } else {
+                                                    setAlert({
+                                                      type: "error",
+                                                      message:
+                                                        json.error ||
+                                                        "Failed to delete admin",
+                                                    });
+                                                  }
+                                                } catch (e) {
+                                                  setAlert({
+                                                    type: "error",
+                                                    message: "Network error",
+                                                  });
                                                 }
-                                              } catch (e) {
-                                                setAlert({ type: "error", message: "Network error" });
-                                              }
-                                            }}>Delete Permanently</AlertDialogAction>
+                                              }}
+                                            >
+                                              Delete Permanently
+                                            </AlertDialogAction>
                                           </AlertDialogFooter>
                                         </AlertDialogContent>
                                       </AlertDialog>
@@ -1136,7 +1407,8 @@ function ManageAdmins({
                                       <TooltipTrigger asChild>
                                         <div>
                                           <DropdownMenuItem disabled>
-                                            <ShieldOff className="w-4 h-4 mr-2" /> Suspend Admin
+                                            <ShieldOff className="w-4 h-4 mr-2" />{" "}
+                                            Suspend Admin
                                           </DropdownMenuItem>
                                         </div>
                                       </TooltipTrigger>
@@ -1150,8 +1422,12 @@ function ManageAdmins({
                                     <Tooltip>
                                       <TooltipTrigger asChild>
                                         <div>
-                                          <DropdownMenuItem disabled className="text-red-600 focus:text-red-600">
-                                            <Trash2 className="w-4 h-4 mr-2" /> Delete Admin
+                                          <DropdownMenuItem
+                                            disabled
+                                            className="text-red-600 focus:text-red-600"
+                                          >
+                                            <Trash2 className="w-4 h-4 mr-2" />{" "}
+                                            Delete Admin
                                           </DropdownMenuItem>
                                         </div>
                                       </TooltipTrigger>

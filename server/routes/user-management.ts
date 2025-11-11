@@ -111,7 +111,9 @@ export const handlePromoteToSystemAdmin: RequestHandler = async (req, res) => {
 
     // Must be an admin to perform this action
     if (callerRole !== "admin") {
-      return res.status(403).json({ error: "Unauthorized. Admin access required." });
+      return res
+        .status(403)
+        .json({ error: "Unauthorized. Admin access required." });
     }
 
     // Ensure caller is a system admin
@@ -119,7 +121,10 @@ export const handlePromoteToSystemAdmin: RequestHandler = async (req, res) => {
     if (!callerUser || callerUser.admin_type !== "system") {
       return res
         .status(403)
-        .json({ error: "Only system administrators can promote other admins to system level." });
+        .json({
+          error:
+            "Only system administrators can promote other admins to system level.",
+        });
     }
 
     const { email } = req.body || {};
@@ -144,7 +149,9 @@ export const handlePromoteToSystemAdmin: RequestHandler = async (req, res) => {
     res.json({ message: "User promoted to system admin successfully", email });
   } catch (error) {
     console.error("Promote to system admin error:", error);
-    res.status(500).json({ error: "Internal server error while promoting user" });
+    res
+      .status(500)
+      .json({ error: "Internal server error while promoting user" });
   }
 };
 
@@ -229,17 +236,25 @@ export const handleSuspendUser: RequestHandler = async (req, res) => {
       const caller = (req as any).user;
       const callerUser = getUserByEmail(caller.email);
       if (!callerUser || callerUser.admin_type !== "system") {
-        return res.status(403).json({ error: "Only system admins can suspend admin accounts" });
+        return res
+          .status(403)
+          .json({ error: "Only system admins can suspend admin accounts" });
       }
 
       // Only allow suspending state-level admins, not system admins
       if (targetUser.admin_type === "system") {
-        return res.status(403).json({ error: "Cannot suspend system administrator" });
+        return res
+          .status(403)
+          .json({ error: "Cannot suspend system administrator" });
       }
 
       const success = await suspendAdminById(userIdNum);
       if (success) {
-        return res.json({ message: "Admin suspended successfully", userId: userIdNum, action: "suspended" });
+        return res.json({
+          message: "Admin suspended successfully",
+          userId: userIdNum,
+          action: "suspended",
+        });
       }
 
       return res.status(500).json({ error: "Failed to suspend admin user" });
@@ -293,17 +308,25 @@ export const handleReactivateUser: RequestHandler = async (req, res) => {
       const caller = (req as any).user;
       const callerUser = getUserByEmail(caller.email);
       if (!callerUser || callerUser.admin_type !== "system") {
-        return res.status(403).json({ error: "Only system admins can reactivate admin accounts" });
+        return res
+          .status(403)
+          .json({ error: "Only system admins can reactivate admin accounts" });
       }
 
       // Only allow reactivating state-level admins, not system admins
       if (targetUser.admin_type === "system") {
-        return res.status(403).json({ error: "Cannot reactivate system administrator" });
+        return res
+          .status(403)
+          .json({ error: "Cannot reactivate system administrator" });
       }
 
       const success = await reactivateAdminById(userIdNum);
       if (success) {
-        return res.json({ message: "Admin reactivated successfully", userId: userIdNum, action: "reactivated" });
+        return res.json({
+          message: "Admin reactivated successfully",
+          userId: userIdNum,
+          action: "reactivated",
+        });
       }
 
       return res.status(500).json({ error: "Failed to reactivate admin user" });
@@ -356,17 +379,25 @@ export const handleDeleteUser: RequestHandler = async (req, res) => {
       const caller = (req as any).user;
       const callerUser = getUserByEmail(caller.email);
       if (!callerUser || callerUser.admin_type !== "system") {
-        return res.status(403).json({ error: "Only system admins can delete admin accounts" });
+        return res
+          .status(403)
+          .json({ error: "Only system admins can delete admin accounts" });
       }
 
       // Prevent deleting system admins
       if (targetUser.admin_type === "system") {
-        return res.status(403).json({ error: "Cannot delete system administrator" });
+        return res
+          .status(403)
+          .json({ error: "Cannot delete system administrator" });
       }
 
       const success = await deleteAdminById(userIdNum);
       if (success) {
-        return res.json({ message: "Admin deleted successfully", userId: userIdNum, action: "deleted" });
+        return res.json({
+          message: "Admin deleted successfully",
+          userId: userIdNum,
+          action: "deleted",
+        });
       }
 
       return res.status(500).json({ error: "Failed to delete admin user" });

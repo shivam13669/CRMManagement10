@@ -52,15 +52,21 @@ export async function initializeAdmin(): Promise<void> {
           // Set admin_type to system if not already
           const ok = setAdminTypeByEmail(targetEmail, "system");
           if (ok) {
-            console.log(`✅ Promoted ${targetEmail} to system admin on startup`);
+            console.log(
+              `✅ Promoted ${targetEmail} to system admin on startup`,
+            );
           } else {
             console.warn(`⚠️ Failed to set admin_type for ${targetEmail}`);
           }
         } else {
-          console.warn(`⚠️ ${targetEmail} exists but is not an admin (role=${targetUser.role})`);
+          console.warn(
+            `⚠️ ${targetEmail} exists but is not an admin (role=${targetUser.role})`,
+          );
         }
       } else {
-        console.warn(`⚠️ ${targetEmail} not found in users table; cannot promote`);
+        console.warn(
+          `⚠️ ${targetEmail} not found in users table; cannot promote`,
+        );
       }
     } catch (promoteError) {
       console.error("❌ Error promoting target admin:", promoteError);

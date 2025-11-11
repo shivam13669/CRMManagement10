@@ -252,14 +252,24 @@ export const authUtils = {
     return !!getAuthToken();
   },
 
-  getCurrentUser(): { role: string; userName: string; admin_type?: string | null; state?: string | null } | null {
+  getCurrentUser(): {
+    role: string;
+    userName: string;
+    admin_type?: string | null;
+    state?: string | null;
+  } | null {
     const role = localStorage.getItem("userRole");
     const userName = localStorage.getItem("userName");
     const admin_type = localStorage.getItem("admin_type");
     const state = localStorage.getItem("state");
 
     if (role && userName) {
-      return { role, userName, admin_type: admin_type || null, state: state || null };
+      return {
+        role,
+        userName,
+        admin_type: admin_type || null,
+        state: state || null,
+      };
     }
 
     return null;
@@ -271,7 +281,8 @@ export const authUtils = {
     localStorage.setItem("userName", user.full_name);
     // if API returns admin_type or state, persist them
     // @ts-ignore
-    if ((user as any).admin_type) localStorage.setItem("admin_type", (user as any).admin_type);
+    if ((user as any).admin_type)
+      localStorage.setItem("admin_type", (user as any).admin_type);
     // @ts-ignore
     if ((user as any).state) localStorage.setItem("state", (user as any).state);
   },

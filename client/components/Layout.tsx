@@ -88,11 +88,14 @@ export function Layout({ children }: LayoutProps) {
       // Fetch full profile to get admin_type/state and persist locally
       (async () => {
         try {
-          const res = await fetchWithAuth("/api/auth/profile", { headers: { "Content-Type": "application/json" } });
+          const res = await fetchWithAuth("/api/auth/profile", {
+            headers: { "Content-Type": "application/json" },
+          });
           if (res && res.ok) {
             const json = await res.json();
             const user = json.user || {};
-            if (user.admin_type) localStorage.setItem("admin_type", user.admin_type);
+            if (user.admin_type)
+              localStorage.setItem("admin_type", user.admin_type);
             if (user.state) localStorage.setItem("state", user.state);
             // Force re-render by updating state
             setNotifications([]);
@@ -271,8 +274,17 @@ export function Layout({ children }: LayoutProps) {
               <User className="w-5 h-5 text-white" />
             </div>
             <div>
-              <div className="font-medium text-gray-900">{currentUser?.userName || "Admin"}</div>
-              <div className="text-sm text-primary">{currentUser?.admin_type === "state" ? "State Admin" : (currentUser?.role ? currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1) : "Administrator")}</div>
+              <div className="font-medium text-gray-900">
+                {currentUser?.userName || "Admin"}
+              </div>
+              <div className="text-sm text-primary">
+                {currentUser?.admin_type === "state"
+                  ? "State Admin"
+                  : currentUser?.role
+                    ? currentUser.role.charAt(0).toUpperCase() +
+                      currentUser.role.slice(1)
+                    : "Administrator"}
+              </div>
             </div>
           </div>
         </div>
@@ -283,7 +295,8 @@ export function Layout({ children }: LayoutProps) {
               .filter(
                 (item) =>
                   !item.adminOnly ||
-                  (currentUser?.role === "admin" && currentUser?.admin_type === "system"),
+                  (currentUser?.role === "admin" &&
+                    currentUser?.admin_type === "system"),
               )
               .map((item) => {
                 const isActive = location.pathname === item.path;
