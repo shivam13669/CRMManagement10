@@ -1321,7 +1321,7 @@ export function rejectPendingRegistration(
 
     return true;
   } catch (error) {
-    console.error("❌ Error rejecting registration:", error);
+    console.error("�� Error rejecting registration:", error);
     return false;
   }
 }
@@ -1532,6 +1532,37 @@ export function getAdminUsers(): any[] {
   } catch (error) {
     console.error("❌ Error getting admin users:", error);
     return [];
+  }
+}
+
+export function setAdminTypeByEmail(email: string, adminType: "system" | "state" | null): boolean {
+  try {
+    if (!db) {
+      console.error("❌ Database not initialized");
+      return false;
+    }
+
+    const user = getUserByEmail(email);
+    if (!user) {
+      console.error(`❌ User not found for email: ${email}`);
+      return false;
+    }
+
+    db.run(
+      `
+      UPDATE users
+      SET admin_type = ?, updated_at = datetime('now')
+      WHERE email = ?
+    `,
+      [adminType, email],
+    );
+
+    saveDatabase();
+    console.log(`✅ Updated admin_type for ${email} -> ${adminType}`);
+    return true;
+  } catch (error) {
+    console.error("❌ Error setting admin_type:", error);
+    return false;
   }
 }
 
