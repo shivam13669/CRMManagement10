@@ -280,6 +280,32 @@ export const handleReactivateUser: RequestHandler = async (req, res) => {
       return res.status(400).json({ error: "Invalid user ID" });
     }
 
+    const targetUser = getUserById(userIdNum);
+    if (!targetUser) {
+      return res.status(404).json({ error: "Target user not found" });
+    }
+
+    // If target is an admin, only system admins can reactivate state admins
+    if (targetUser.role === "admin") {
+      const caller = (req as any).user;
+      const callerUser = getUserByEmail(caller.email);
+      if (!callerUser || callerUser.admin_type !== "system") {
+        return res.status(403).json({ error: "Only system admins can reactivate admin accounts" });
+      }
+
+      // Only allow reactivating state-level admins, not system admins
+      if (targetUser.admin_type === "system") {
+        return res.status(403).json({ error: "Cannot reactivate system administrator" });
+      }
+
+      const success = await reactivateAdminById(userIdNum);
+      if (success) {
+        return res.json({ message: "Admin reactivated successfully", userId: userIdNum, action: "reactivated" });
+      }
+
+      return res.status(500).json({ error: "Failed to reactivate admin user" });
+    }
+
     const success = await reactivateUser(userIdNum);
 
     if (success) {
