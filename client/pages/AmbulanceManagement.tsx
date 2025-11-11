@@ -77,6 +77,10 @@ interface AmbulanceRequest {
   customer_signup_address?: string;
   customer_signup_lat?: string;
   customer_signup_lng?: string;
+  // Added forwarded hospital display fields
+  forwarded_hospital_name?: string;
+  forwarded_hospital_address?: string;
+  forwarded_hospital_user_name?: string;
 }
 
 interface Hospital {
@@ -189,22 +193,33 @@ export default function AmbulanceManagement() {
       setHospitalsLoading(true);
       const token = localStorage.getItem("authToken");
 
-      // For state admins, use their assigned state; otherwise use the provided state
-      const stateToUse =
-        currentUser?.admin_type === "state" ? currentUser?.state : state;
+      // For state admins, fetch hospitals only in their state. For system admins, fetch all hospitals.
+      if (!token) return;
 
-      if (!token || !stateToUse) return;
+      let response: Response | null = null;
 
-      const response = await fetchWithAuth(
-        `/api/hospitals/by-state/${stateToUse}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
+      if (currentUser?.admin_type === "state") {
+        const stateToUse = currentUser?.state || state;
+        if (!stateToUse) {
+          setHospitals([]);
+          setHospitalsLoading(false);
+          return;
+        }
+
+        response = await fetchWithAuth(
+          `/api/hospitals/by-state/${stateToUse}`,
+          {
+            headers: { "Content-Type": "application/json" },
           },
-        },
-      );
+        );
+      } else {
+        // System admins (and others) get all hospitals
+        response = await fetchWithAuth(`/api/admin/hospitals`, {
+          headers: { "Content-Type": "application/json" },
+        });
+      }
 
-      if (response.ok) {
+      if (response && response.ok) {
         const data = await response.json();
         setHospitals(data.hospitals || []);
       }
@@ -264,11 +279,40 @@ export default function AmbulanceManagement() {
 
       if (response.ok) {
         toast.success("Request forwarded to hospital successfully");
+        // Update selectedRequest in-place so the modal immediately shows forwarded info
+        const hospitalIdNum = parseInt(selectedHospital || "0");
+        const forwardedHosp = hospitals.find(
+          (h) => h.user_id === hospitalIdNum,
+        );
+        setSelectedRequest((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            forwarded_to_hospital_id: hospitalIdNum,
+            forwarded_hospital_name:
+              forwardedHosp?.hospital_name ||
+              forwardedHosp?.name ||
+              forwardedHosp?.user_id?.toString(),
+            forwarded_hospital_address: forwardedHosp?.address || "",
+            hospital_response: "pending",
+            status: prev.status === "pending" ? prev.status : prev.status,
+          } as any;
+        });
+
+        // Close only the forward modal, keep the main request modal open
         setForwardModalOpen(false);
         setSelectedHospital("");
+        // Refresh list in background
         fetchRequests();
       } else {
-        toast.error("Failed to forward request");
+        let errMsg = "Failed to forward request";
+        try {
+          const data = await response.json();
+          if (data && data.error) errMsg = data.error;
+        } catch (e) {
+          // ignore
+        }
+        toast.error(errMsg);
       }
     } catch (error) {
       console.error("Error forwarding request:", error);
@@ -1000,7 +1044,31 @@ export default function AmbulanceManagement() {
                     )}
                   </div>
 
-                  {/* Hospital Response */}
+                  {/* Forwarded Hospital Info (show when forwarded_to_hospital_id exists) */}
+                  {selectedRequest.forwarded_to_hospital_id && (
+                    <div className="bg-purple-50 p-4 rounded-lg mb-3">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Hospital className="w-5 h-5 text-purple-600" />
+                        <span className="font-semibold text-purple-900">
+                          Forwarded To
+                        </span>
+                      </div>
+                      <div className="ml-6">
+                        <div className="font-medium text-purple-800">
+                          {selectedRequest.forwarded_hospital_name ||
+                            selectedRequest.forwarded_hospital_user_name ||
+                            "Hospital"}
+                        </div>
+                        {selectedRequest.forwarded_hospital_address && (
+                          <div className="text-purple-700 text-sm">
+                            {selectedRequest.forwarded_hospital_address}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Hospital Response (status/notes) */}
                   {selectedRequest.forwarded_to_hospital_id &&
                     selectedRequest.hospital_response && (
                       <div className="bg-purple-50 p-4 rounded-lg">

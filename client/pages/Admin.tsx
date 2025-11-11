@@ -74,6 +74,7 @@ import {
   Filter,
   Plus,
   LayoutList,
+  MapPin,
 } from "lucide-react";
 
 interface AdminUser {
@@ -665,6 +666,26 @@ function ManageAdmins({
                                                 <Users className="w-4 h-4 text-gray-400" />
                                                 <span>
                                                   {selectedUser.phone}
+                                                </span>
+                                              </div>
+                                            )}
+
+                                            {/* State and District (if available) */}
+                                            {/* State and District (if available), shown on separate lines */}
+                                            {selectedUser.state && (
+                                              <div className="flex items-center space-x-2">
+                                                <MapPin className="w-4 h-4 text-gray-400" />
+                                                <span>
+                                                  State: {selectedUser.state}
+                                                </span>
+                                              </div>
+                                            )}
+                                            {selectedUser.district && (
+                                              <div className="flex items-center space-x-2">
+                                                <MapPin className="w-4 h-4 text-gray-400" />
+                                                <span>
+                                                  District:{" "}
+                                                  {selectedUser.district}
                                                 </span>
                                               </div>
                                             )}

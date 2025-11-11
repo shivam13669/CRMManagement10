@@ -527,6 +527,97 @@ async function runMigrations(): Promise<void> {
           "✅ Ambulance request forwarding columns added successfully",
         );
       }
+
+      // Ensure status CHECK includes forwarded_to_hospital and hospital response statuses
+      try {
+        const tableSqlRes = db.exec(
+          "SELECT sql FROM sqlite_master WHERE type='table' AND name='ambulance_requests'",
+        );
+        const createSql = tableSqlRes[0]?.values[0][0] || "";
+        if (createSql && !createSql.includes("forwarded_to_hospital")) {
+          console.log(
+            "🛠️ Updating ambulance_requests status CHECK to include forwarded statuses...",
+          );
+
+          // Recreate table with new schema including additional statuses
+          db.run("BEGIN TRANSACTION");
+
+          db.run(`
+            CREATE TABLE IF NOT EXISTS ambulance_requests_new (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              customer_user_id INTEGER NOT NULL,
+              pickup_address TEXT NOT NULL,
+              destination_address TEXT NOT NULL,
+              emergency_type TEXT NOT NULL,
+              customer_condition TEXT,
+              contact_number TEXT NOT NULL,
+              status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'assigned', 'on_the_way', 'completed', 'cancelled', 'forwarded_to_hospital', 'hospital_accepted', 'hospital_rejected')),
+              priority TEXT DEFAULT 'normal' CHECK(priority IN ('low', 'normal', 'high', 'critical')),
+              assigned_staff_id INTEGER,
+              notes TEXT,
+              is_read INTEGER DEFAULT 0,
+              forwarded_to_hospital_id INTEGER,
+              hospital_response TEXT CHECK(hospital_response IN ('pending', 'accepted', 'rejected')),
+              hospital_response_notes TEXT,
+              hospital_response_date DATETIME,
+              customer_state TEXT,
+              customer_district TEXT,
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+              updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+          `);
+
+          // Copy existing columns that exist into the new table
+          const existingInfo = db.exec("PRAGMA table_info(ambulance_requests)");
+          const existingCols = (existingInfo[0]?.values || []).map(
+            (r: any) => r[1],
+          );
+
+          const colsToCopy = [
+            "id",
+            "customer_user_id",
+            "pickup_address",
+            "destination_address",
+            "emergency_type",
+            "customer_condition",
+            "contact_number",
+            "status",
+            "priority",
+            "assigned_staff_id",
+            "notes",
+            "is_read",
+            "forwarded_to_hospital_id",
+            "hospital_response",
+            "hospital_response_notes",
+            "hospital_response_date",
+            "customer_state",
+            "customer_district",
+            "created_at",
+            "updated_at",
+          ].filter((c) => existingCols.includes(c));
+
+          if (colsToCopy.length > 0) {
+            db.run(`
+              INSERT INTO ambulance_requests_new (${colsToCopy.join(",")})
+              SELECT ${colsToCopy.join(",")} FROM ambulance_requests;
+            `);
+          }
+
+          db.run("DROP TABLE ambulance_requests");
+          db.run(
+            "ALTER TABLE ambulance_requests_new RENAME TO ambulance_requests",
+          );
+
+          db.run("COMMIT");
+
+          console.log("✅ ambulance_requests table updated successfully");
+        }
+      } catch (innerErr) {
+        console.log(
+          "⚠️ Could not update ambulance_requests status CHECK:",
+          innerErr.message,
+        );
+      }
     } catch (error) {
       console.log(
         "⚠️ Ambulance request columns migration skipped:",
@@ -1854,7 +1945,7 @@ export function getAllHospitals(): any[] {
   }
 }
 
-function parseAddressForStateDistrict(address: string): {
+export function parseAddressForStateDistrict(address: string): {
   state: string | null;
   district: string | null;
 } {

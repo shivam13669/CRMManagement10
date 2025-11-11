@@ -1,5 +1,5 @@
 import { RequestHandler } from "express";
-import { db } from "../database";
+import { db, parseAddressForStateDistrict } from "../database";
 
 export interface AmbulanceRequest {
   id?: number;
@@ -48,13 +48,50 @@ export const handleCreateAmbulanceRequest: RequestHandler = async (
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Insert ambulance request
+    // Parse pickup address to extract state/district (if possible)
+    const latLngRegex = /^\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*$/;
+    let customerState: string | null = null;
+    let customerDistrict: string | null = null;
+
+    if (pickup_address && latLngRegex.test(pickup_address)) {
+      // If pickup_address is coordinates, reverse geocode using Nominatim
+      try {
+        const [lat, lng] = pickup_address
+          .split(",")
+          .map((v: string) => v.trim());
+        const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(
+          lat,
+        )}&lon=${encodeURIComponent(lng)}&addressdetails=1`;
+        const res = await fetch(url, {
+          headers: { "User-Agent": "Healthcare-App/1.0" },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const display = data.display_name || "";
+          const parsed = parseAddressForStateDistrict(display);
+          customerState = parsed.state;
+          customerDistrict = parsed.district;
+          // Optionally replace pickup_address with readable display name
+          // but keep original coords as well; for now we keep original value
+        } else {
+          console.warn("Reverse geocode failed with status", res.status);
+        }
+      } catch (err) {
+        console.error("Reverse geocode error:", err);
+      }
+    } else {
+      const parsedLocation = parseAddressForStateDistrict(pickup_address || "");
+      customerState = parsedLocation.state;
+      customerDistrict = parsedLocation.district;
+    }
+
+    // Insert ambulance request with extracted state/district
     db.run(
       `
       INSERT INTO ambulance_requests (
         customer_user_id, pickup_address, destination_address, emergency_type,
-        customer_condition, contact_number, priority, status, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', datetime('now'))
+        customer_condition, contact_number, priority, customer_state, customer_district, status, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', datetime('now'))
     `,
       [
         userId,
@@ -64,6 +101,8 @@ export const handleCreateAmbulanceRequest: RequestHandler = async (
         customer_condition || null,
         contact_number,
         priority,
+        customerState,
+        customerDistrict,
       ],
     );
 
@@ -71,43 +110,40 @@ export const handleCreateAmbulanceRequest: RequestHandler = async (
     const result = db.exec("SELECT last_insert_rowid() as id");
     const requestId = result[0].values[0][0];
 
-    // Get customer state from user profile
-    let customerState = null;
-    const userResult = db.exec(
-      `SELECT address FROM customers WHERE user_id = ?`,
-      [userId],
-    );
-
-    if (userResult.length > 0 && userResult[0].values.length > 0) {
-      // In a real app, you'd parse the address to get state
-      // For now, we'll update the request with state information from customer data
+    // Notify relevant admins: system admins (all requests) and state admins for this state
+    let adminResult: any;
+    if (customerState) {
+      adminResult = db.exec(
+        `SELECT id FROM users WHERE role = 'admin' AND (admin_type = 'system' OR (admin_type = 'state' AND state = ?))`,
+        [customerState],
+      );
+    } else {
+      // If no state could be parsed, notify only system admins
+      adminResult = db.exec(
+        `SELECT id FROM users WHERE role = 'admin' AND admin_type = 'system'`,
+      );
     }
 
-    // Create notification for admins about critical requests
-    if (priority === "critical" || priority === "high") {
-      const adminResult = db.exec(`SELECT id FROM users WHERE role = 'admin'`);
-
-      if (adminResult.length > 0 && adminResult[0].values.length > 0) {
-        const adminRows = adminResult[0].values;
-        adminRows.forEach((adminRow) => {
-          const adminId = adminRow[0];
-          db.run(
-            `
+    if (adminResult.length > 0 && adminResult[0].values.length > 0) {
+      const adminRows = adminResult[0].values;
+      adminRows.forEach((adminRow) => {
+        const adminId = adminRow[0];
+        db.run(
+          `
             INSERT INTO notifications (user_id, type, title, message, related_id, created_at)
-            VALUES (?, 'ambulance', 'Urgent Ambulance Request', ?, ?, datetime('now'))
+            VALUES (?, 'ambulance', 'Ambulance Request', ?, ?, datetime('now'))
           `,
-            [
-              adminId,
-              `Urgent ambulance request created - ${priority} priority`,
-              requestId,
-            ],
-          );
-        });
-      }
+          [
+            adminId,
+            `Ambulance request received${customerState ? ` - ${customerState}` : ""}`,
+            requestId,
+          ],
+        );
+      });
     }
 
     console.log(
-      `🚑 Ambulance request created: ID ${requestId} for user ${userId}`,
+      `🚑 Ambulance request created: ID ${requestId} for user ${userId} (state=${customerState})`,
     );
 
     res.status(201).json({
@@ -150,8 +186,9 @@ export const handleGetAmbulanceRequests: RequestHandler = async (req, res) => {
         ar.is_read,
         ar.forwarded_to_hospital_id,
         ar.hospital_response,
-        ar.customer_state,
+          ar.customer_state,
         ar.customer_district,
+        ar.forwarded_to_hospital_id,
         ar.created_at,
         u.full_name as patient_name,
         u.email as patient_email,
@@ -160,11 +197,16 @@ export const handleGetAmbulanceRequests: RequestHandler = async (req, res) => {
         c.signup_lat as customer_signup_lat,
         c.signup_lng as customer_signup_lng,
         staff.full_name as assigned_staff_name,
-        staff.phone as assigned_staff_phone
+        staff.phone as assigned_staff_phone,
+        h2.hospital_name as forwarded_hospital_name,
+        h2.address as forwarded_hospital_address,
+        u2.full_name as forwarded_hospital_user_name
       FROM ambulance_requests ar
       JOIN users u ON ar.customer_user_id = u.id
       LEFT JOIN customers c ON u.id = c.user_id
       LEFT JOIN users staff ON ar.assigned_staff_id = staff.id
+      LEFT JOIN hospitals h2 ON ar.forwarded_to_hospital_id = h2.user_id
+      LEFT JOIN users u2 ON h2.user_id = u2.id
       ORDER BY ar.created_at DESC
     `);
     } catch (err) {
@@ -185,16 +227,22 @@ export const handleGetAmbulanceRequests: RequestHandler = async (req, res) => {
         ar.priority,
         ar.notes,
         ar.created_at,
+        ar.forwarded_to_hospital_id,
         u.full_name as patient_name,
         u.email as patient_email,
         u.phone as patient_phone,
         c.address as customer_signup_address,
         staff.full_name as assigned_staff_name,
-        staff.phone as assigned_staff_phone
+        staff.phone as assigned_staff_phone,
+        h2.hospital_name as forwarded_hospital_name,
+        h2.address as forwarded_hospital_address,
+        u2.full_name as forwarded_hospital_user_name
       FROM ambulance_requests ar
       JOIN users u ON ar.customer_user_id = u.id
       LEFT JOIN customers c ON u.id = c.user_id
       LEFT JOIN users staff ON ar.assigned_staff_id = staff.id
+      LEFT JOIN hospitals h2 ON ar.forwarded_to_hospital_id = h2.user_id
+      LEFT JOIN users u2 ON h2.user_id = u2.id
       ORDER BY ar.created_at DESC
     `);
     }
@@ -540,17 +588,42 @@ export const handleForwardToHospital: RequestHandler = async (req, res) => {
       return res.status(404).json({ error: "Hospital not found" });
     }
 
-    // Forward the request
-    db.run(
-      `
-      UPDATE ambulance_requests
-      SET forwarded_to_hospital_id = ?, status = 'forwarded_to_hospital',
-          is_read = 0, hospital_response = 'pending',
-          updated_at = datetime('now')
-      WHERE id = ?
-    `,
-      [hospital_user_id, requestId],
-    );
+    // Forward the request: update forwarded fields first without touching status to avoid CHECK constraint
+    try {
+      db.run(
+        `
+        UPDATE ambulance_requests
+        SET forwarded_to_hospital_id = ?,
+            is_read = 0, hospital_response = 'pending',
+            updated_at = datetime('now')
+        WHERE id = ?
+      `,
+        [hospital_user_id, requestId],
+      );
+    } catch (err) {
+      console.error(
+        "Failed to update ambulance request forwarded fields:",
+        err && err.message,
+      );
+      return res.status(500).json({ error: "Failed to forward request" });
+    }
+
+    // Try to set status to forwarded if schema supports it (best effort)
+    try {
+      db.run(
+        `
+        UPDATE ambulance_requests
+        SET status = 'forwarded_to_hospital'
+        WHERE id = ?
+      `,
+        [requestId],
+      );
+    } catch (statusErr) {
+      console.warn(
+        "Could not set status to forwarded (probably older schema), continuing without changing status:",
+        statusErr && statusErr.message,
+      );
+    }
 
     // Create notification for hospital
     db.run(
