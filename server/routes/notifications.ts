@@ -199,7 +199,7 @@ export const handleGetNotifications: RequestHandler = async (req, res) => {
     // Get recent ambulance requests (last 12 hours)
     let ambulanceResult: any = [];
     try {
-      ambulanceResult = db.exec(`
+      let ambulanceQuery = `
         SELECT
           ar.id,
           ar.emergency_type,
@@ -210,9 +210,23 @@ export const handleGetNotifications: RequestHandler = async (req, res) => {
           u.full_name as customer_name
         FROM ambulance_requests ar
         JOIN users u ON ar.customer_user_id = u.id
+      `;
+
+      // Filter by state if the user is a state admin
+      if (role === "admin" && adminType === "state" && adminState) {
+        ambulanceQuery += ` WHERE ar.customer_state = ?`;
+      }
+
+      ambulanceQuery += `
         ORDER BY COALESCE(ar.updated_at, ar.created_at) DESC
         LIMIT 10
-      `);
+      `;
+
+      if (role === "admin" && adminType === "state" && adminState) {
+        ambulanceResult = db.exec(ambulanceQuery, [adminState]);
+      } else {
+        ambulanceResult = db.exec(ambulanceQuery);
+      }
     } catch (error) {
       console.error(
         "Error fetching ambulance requests for notifications:",
