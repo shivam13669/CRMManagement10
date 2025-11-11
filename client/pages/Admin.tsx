@@ -873,40 +873,86 @@ function ManageAdmins({
 
                               <DropdownMenuSeparator />
 
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <div>
-                                      <DropdownMenuItem disabled>
-                                        <ShieldOff className="w-4 h-4 mr-2" />{" "}
-                                        Suspend Admin
-                                      </DropdownMenuItem>
-                                    </div>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    Not allowed for admin accounts
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
+                              {currentUser?.admin_type === "system" && user.admin_type === "state" ? (
+                                <>
+                                  <DropdownMenuItem
+                                    onSelect={async (e) => {
+                                      e.preventDefault();
+                                      const ok = confirm(`Suspend admin ${user.full_name}?`);
+                                      if (!ok) return;
+                                      try {
+                                        const res = await fetchWithAuth(`/api/admin/users/${user.id}/suspend`, { method: "POST", headers: { "Content-Type": "application/json" } });
+                                        const json = await res.json();
+                                        if (res.ok) {
+                                          setAlert({ type: "success", message: "Admin suspended" });
+                                          fetchAdmins();
+                                        } else {
+                                          setAlert({ type: "error", message: json.error || "Failed to suspend admin" });
+                                        }
+                                      } catch (e) {
+                                        setAlert({ type: "error", message: "Network error" });
+                                      }
+                                    }}
+                                  >
+                                    <ShieldOff className="w-4 h-4 mr-2" /> Suspend Admin
+                                  </DropdownMenuItem>
 
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <div>
-                                      <DropdownMenuItem
-                                        disabled
-                                        className="text-red-600 focus:text-red-600"
-                                      >
-                                        <Trash2 className="w-4 h-4 mr-2" />{" "}
-                                        Delete Admin
-                                      </DropdownMenuItem>
-                                    </div>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    Not allowed for admin accounts
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
+                                  <DropdownMenuItem
+                                    onSelect={async (e) => {
+                                      e.preventDefault();
+                                      const ok = confirm(`Delete admin ${user.full_name}? This cannot be undone.`);
+                                      if (!ok) return;
+                                      try {
+                                        const res = await fetchWithAuth(`/api/admin/users/${user.id}`, { method: "DELETE", headers: { "Content-Type": "application/json" } });
+                                        const json = await res.json();
+                                        if (res.ok) {
+                                          setAlert({ type: "success", message: "Admin deleted" });
+                                          fetchAdmins();
+                                        } else {
+                                          setAlert({ type: "error", message: json.error || "Failed to delete admin" });
+                                        }
+                                      } catch (e) {
+                                        setAlert({ type: "error", message: "Network error" });
+                                      }
+                                    }}
+                                    className="text-red-600 focus:text-red-600"
+                                  >
+                                    <Trash2 className="w-4 h-4 mr-2" /> Delete Admin
+                                  </DropdownMenuItem>
+                                </>
+                              ) : (
+                                <>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <div>
+                                          <DropdownMenuItem disabled>
+                                            <ShieldOff className="w-4 h-4 mr-2" /> Suspend Admin
+                                          </DropdownMenuItem>
+                                        </div>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        Not allowed for admin accounts
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <div>
+                                          <DropdownMenuItem disabled className="text-red-600 focus:text-red-600">
+                                            <Trash2 className="w-4 h-4 mr-2" /> Delete Admin
+                                          </DropdownMenuItem>
+                                        </div>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        Not allowed for admin accounts
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
