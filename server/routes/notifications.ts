@@ -15,7 +15,7 @@ export interface Notification {
 // Get notifications for admin/staff
 export const handleGetNotifications: RequestHandler = async (req, res) => {
   try {
-    const { role } = (req as any).user;
+    const { role, userId } = (req as any).user;
 
     if (role !== "admin" && role !== "staff") {
       return res
@@ -24,6 +24,21 @@ export const handleGetNotifications: RequestHandler = async (req, res) => {
     }
 
     const notifications: Notification[] = [];
+
+    // Get user's admin type and state for filtering
+    let adminType = null;
+    let adminState = null;
+    if (role === "admin") {
+      const userResult = db.exec(
+        `SELECT admin_type, state FROM users WHERE id = ?`,
+        [userId],
+      );
+      if (userResult.length > 0 && userResult[0].values.length > 0) {
+        const userRow = userResult[0].values[0];
+        adminType = userRow[0];
+        adminState = userRow[1];
+      }
+    }
 
     // Get recent appointments (last 24 hours)
     let appointmentsResult: any = [];
