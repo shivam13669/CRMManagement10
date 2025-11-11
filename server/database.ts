@@ -691,6 +691,31 @@ async function runMigrations(): Promise<void> {
       );
     }
 
+    // Migration 8: Add assigned_ambulance_id column to ambulance_requests table
+    try {
+      const ambulanceTableInfo = db.exec(
+        "PRAGMA table_info(ambulance_requests)",
+      );
+      const hasAssignedAmbulanceId = ambulanceTableInfo[0]?.values.some(
+        (row) => row[1] === "assigned_ambulance_id",
+      );
+
+      if (!hasAssignedAmbulanceId) {
+        console.log(
+          "📝 Adding assigned_ambulance_id column to ambulance_requests table...",
+        );
+        db.run(
+          "ALTER TABLE ambulance_requests ADD COLUMN assigned_ambulance_id INTEGER",
+        );
+        console.log("✅ assigned_ambulance_id column added successfully");
+      }
+    } catch (error) {
+      console.log(
+        "⚠️ assigned_ambulance_id column migration skipped:",
+        error.message,
+      );
+    }
+
     console.log("🔄 All migrations completed");
   } catch (error) {
     console.error("❌ Error running migrations:", error);
