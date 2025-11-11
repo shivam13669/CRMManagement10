@@ -572,36 +572,35 @@ export const handleForwardToHospital: RequestHandler = async (req, res) => {
       return res.status(404).json({ error: "Hospital not found" });
     }
 
-    // Forward the request
+    // Forward the request: update forwarded fields first without touching status to avoid CHECK constraint
     try {
       db.run(
         `
         UPDATE ambulance_requests
-        SET forwarded_to_hospital_id = ?, status = 'forwarded_to_hospital',
+        SET forwarded_to_hospital_id = ?,
             is_read = 0, hospital_response = 'pending',
             updated_at = datetime('now')
         WHERE id = ?
       `,
         [hospital_user_id, requestId],
       );
-    } catch (updateErr) {
-      // If DB schema doesn't allow 'forwarded_to_hospital' status (old CHECK), fallback to safe status 'assigned'
-      console.warn('Forward update with special status failed, falling back to assigned:', updateErr && updateErr.message);
-      try {
-        db.run(
-          `
-          UPDATE ambulance_requests
-          SET forwarded_to_hospital_id = ?, status = 'assigned',
-              is_read = 0, hospital_response = 'pending',
-              updated_at = datetime('now')
-          WHERE id = ?
-        `,
-          [hospital_user_id, requestId],
-        );
-      } catch (fallbackErr) {
-        console.error('Fallback update also failed:', fallbackErr && fallbackErr.message);
-        return res.status(500).json({ error: 'Failed to forward request due to database schema issue' });
-      }
+    } catch (err) {
+      console.error('Failed to update ambulance request forwarded fields:', err && err.message);
+      return res.status(500).json({ error: 'Failed to forward request' });
+    }
+
+    // Try to set status to forwarded if schema supports it (best effort)
+    try {
+      db.run(
+        `
+        UPDATE ambulance_requests
+        SET status = 'forwarded_to_hospital'
+        WHERE id = ?
+      `,
+        [requestId],
+      );
+    } catch (statusErr) {
+      console.warn('Could not set status to forwarded (probably older schema), continuing without changing status:', statusErr && statusErr.message);
     }
 
     // Create notification for hospital
