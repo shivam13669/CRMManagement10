@@ -41,7 +41,11 @@ interface AmbulanceRequest {
 
 const statusSteps = [
   { key: "pending", label: "Request Received", icon: CheckCircle },
-  { key: "forwarded_to_hospital", label: "Forwarded to Hospital", icon: Hospital },
+  {
+    key: "forwarded_to_hospital",
+    label: "Forwarded to Hospital",
+    icon: Hospital,
+  },
   { key: "hospital_accepted", label: "Hospital Accepted", icon: CheckCircle },
   { key: "hospital_rejected", label: "Hospital Rejected", icon: AlertCircle },
   { key: "on_the_way", label: "Ambulance On The Way", icon: Truck },
@@ -52,7 +56,8 @@ export default function TrackRequest() {
   const [requests, setRequests] = useState<AmbulanceRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState<AmbulanceRequest | null>(null);
+  const [selectedRequest, setSelectedRequest] =
+    useState<AmbulanceRequest | null>(null);
 
   const fetchRequests = async (showRefreshing = false) => {
     try {
@@ -335,20 +340,26 @@ export default function TrackRequest() {
                     </h3>
                     <div className="space-y-3">
                       {statusSteps.map((step, index) => {
-                        const isCompleted = getStatusProgress(request.status) > index;
+                        const isCompleted =
+                          getStatusProgress(request.status) > index;
                         const isCurrent = request.status === step.key;
-                        const isRejected = request.status === "hospital_rejected";
+                        const isRejected =
+                          request.status === "hospital_rejected";
 
                         // Hide "On The Way" and "Completed" if request was rejected
                         if (
                           isRejected &&
-                          (step.key === "on_the_way" || step.key === "completed")
+                          (step.key === "on_the_way" ||
+                            step.key === "completed")
                         ) {
                           return null;
                         }
 
                         return (
-                          <div key={step.key} className="flex items-center space-x-3">
+                          <div
+                            key={step.key}
+                            className="flex items-center space-x-3"
+                          >
                             <div
                               className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
                                 isCompleted || isCurrent
@@ -388,7 +399,9 @@ export default function TrackRequest() {
                               {request.hospital_response_date &&
                                 step.key === request.status && (
                                   <p className="text-xs text-gray-500 mt-1">
-                                    {formatDateTime(request.hospital_response_date)}
+                                    {formatDateTime(
+                                      request.hospital_response_date,
+                                    )}
                                   </p>
                                 )}
                               {request.hospital_response_notes &&

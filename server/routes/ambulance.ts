@@ -85,9 +85,7 @@ export const handleCreateAmbulanceRequest: RequestHandler = async (
 
     // Create notification for admins about critical requests
     if (priority === "critical" || priority === "high") {
-      const adminResult = db.exec(
-        `SELECT id FROM users WHERE role = 'admin'`,
-      );
+      const adminResult = db.exec(`SELECT id FROM users WHERE role = 'admin'`);
 
       if (adminResult.length > 0 && adminResult[0].values.length > 0) {
         const adminRows = adminResult[0].values;
@@ -98,7 +96,11 @@ export const handleCreateAmbulanceRequest: RequestHandler = async (
             INSERT INTO notifications (user_id, type, title, message, related_id, created_at)
             VALUES (?, 'ambulance', 'Urgent Ambulance Request', ?, ?, datetime('now'))
           `,
-            [adminId, `Urgent ambulance request created - ${priority} priority`, requestId],
+            [
+              adminId,
+              `Urgent ambulance request created - ${priority} priority`,
+              requestId,
+            ],
           );
         });
       }

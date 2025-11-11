@@ -190,7 +190,8 @@ export default function AmbulanceManagement() {
       const token = localStorage.getItem("authToken");
 
       // For state admins, use their assigned state; otherwise use the provided state
-      const stateToUse = currentUser?.admin_type === "state" ? currentUser?.state : state;
+      const stateToUse =
+        currentUser?.admin_type === "state" ? currentUser?.state : state;
 
       if (!token || !stateToUse) return;
 
@@ -340,7 +341,14 @@ export default function AmbulanceManagement() {
     }
 
     setFilteredRequests(filtered);
-  }, [requests, searchTerm, statusFilter, priorityFilter, activeTab, currentUser]);
+  }, [
+    requests,
+    searchTerm,
+    statusFilter,
+    priorityFilter,
+    activeTab,
+    currentUser,
+  ]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -485,7 +493,8 @@ export default function AmbulanceManagement() {
     critical: requests.filter((r) => r.priority === "critical").length,
   };
 
-  const LayoutComponent = currentUser?.admin_type === "state" ? StateAdminLayout : Layout;
+  const LayoutComponent =
+    currentUser?.admin_type === "state" ? StateAdminLayout : Layout;
 
   if (loading) {
     return (
