@@ -233,6 +233,7 @@ export const handleGetAmbulanceRequests: RequestHandler = async (req, res) => {
         ar.notes,
         ar.created_at,
         ar.forwarded_to_hospital_id,
+        ar.assigned_ambulance_id,
         u.full_name as patient_name,
         u.email as patient_email,
         u.phone as patient_phone,
@@ -241,13 +242,18 @@ export const handleGetAmbulanceRequests: RequestHandler = async (req, res) => {
         staff.phone as assigned_staff_phone,
         h2.hospital_name as forwarded_hospital_name,
         h2.address as forwarded_hospital_address,
-        u2.full_name as forwarded_hospital_user_name
+        u2.full_name as forwarded_hospital_user_name,
+        ha.registration_number as ambulance_registration,
+        ha.ambulance_type,
+        ha.driver_name as ambulance_driver_name,
+        ha.driver_phone as ambulance_driver_phone
       FROM ambulance_requests ar
       JOIN users u ON ar.customer_user_id = u.id
       LEFT JOIN customers c ON u.id = c.user_id
       LEFT JOIN users staff ON ar.assigned_staff_id = staff.id
       LEFT JOIN hospitals h2 ON ar.forwarded_to_hospital_id = h2.user_id
       LEFT JOIN users u2 ON h2.user_id = u2.id
+      LEFT JOIN hospital_ambulances ha ON ar.assigned_ambulance_id = ha.id
       ORDER BY ar.created_at DESC
     `);
     }
