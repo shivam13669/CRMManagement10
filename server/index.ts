@@ -101,6 +101,15 @@ import {
   handleUpdateHospital,
   handleAdminUpdateHospital,
 } from "./routes/hospital";
+import {
+  handleGetHospitalAmbulances,
+  handleCreateHospitalAmbulance,
+  handleUpdateHospitalAmbulance,
+  handleDeleteHospitalAmbulance,
+  handleParkAmbulance,
+  handleAssignAmbulanceToRequest,
+  handleGetAvailableAmbulances,
+} from "./routes/hospital-ambulances";
 import { initDatabase } from "./database";
 import { initializeAdmin } from "./admin-init";
 
