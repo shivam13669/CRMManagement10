@@ -529,6 +529,12 @@ export default function AdminDashboard() {
                       <div className="text-sm text-gray-500">
                         {request.emergency_type}
                       </div>
+                      {request.ambulance_registration && (
+                        <div className="text-xs text-green-600 font-medium mt-1">
+                          🚑 {request.ambulance_registration} (
+                          {request.ambulance_type})
+                        </div>
+                      )}
                       <div className="text-xs text-gray-400 mt-1">
                         {new Date(request.created_at).toLocaleString()}
                       </div>

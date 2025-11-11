@@ -210,6 +210,7 @@ function createTables(): void {
         status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'assigned', 'on_the_way', 'completed', 'cancelled', 'forwarded_to_hospital', 'hospital_accepted', 'hospital_rejected')),
         priority TEXT DEFAULT 'normal' CHECK(priority IN ('low', 'normal', 'high', 'critical')),
         assigned_staff_id INTEGER,
+        assigned_ambulance_id INTEGER,
         notes TEXT,
         is_read INTEGER DEFAULT 0,
         forwarded_to_hospital_id INTEGER,
@@ -222,6 +223,7 @@ function createTables(): void {
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (customer_user_id) REFERENCES users (id) ON DELETE CASCADE,
         FOREIGN KEY (assigned_staff_id) REFERENCES users (id) ON DELETE SET NULL,
+        FOREIGN KEY (assigned_ambulance_id) REFERENCES hospital_ambulances (id) ON DELETE SET NULL,
         FOREIGN KEY (forwarded_to_hospital_id) REFERENCES users (id) ON DELETE SET NULL
       )
     `);
@@ -366,6 +368,30 @@ function createTables(): void {
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (hospital_user_id) REFERENCES users (id) ON DELETE CASCADE,
         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      )
+    `);
+
+    // Hospital ambulances table
+    db.run(`
+      CREATE TABLE IF NOT EXISTS hospital_ambulances (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        hospital_user_id INTEGER NOT NULL,
+        registration_number TEXT NOT NULL UNIQUE,
+        ambulance_type TEXT NOT NULL CHECK(ambulance_type IN ('Basic Life Support', 'Advanced Life Support', 'Ventilator Support')),
+        model TEXT,
+        manufacturer TEXT,
+        registration_year INTEGER,
+        driver_name TEXT,
+        driver_phone TEXT,
+        driver_license_number TEXT,
+        equipment TEXT,
+        status TEXT DEFAULT 'available' CHECK(status IN ('available', 'assigned', 'maintenance', 'parked')),
+        current_location TEXT,
+        assigned_request_id INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (hospital_user_id) REFERENCES users (id) ON DELETE CASCADE,
+        FOREIGN KEY (assigned_request_id) REFERENCES ambulance_requests (id) ON DELETE SET NULL
       )
     `);
 
@@ -661,6 +687,31 @@ async function runMigrations(): Promise<void> {
     } catch (error) {
       console.log(
         "⚠️ Signup location columns migration skipped:",
+        error.message,
+      );
+    }
+
+    // Migration 8: Add assigned_ambulance_id column to ambulance_requests table
+    try {
+      const ambulanceTableInfo = db.exec(
+        "PRAGMA table_info(ambulance_requests)",
+      );
+      const hasAssignedAmbulanceId = ambulanceTableInfo[0]?.values.some(
+        (row) => row[1] === "assigned_ambulance_id",
+      );
+
+      if (!hasAssignedAmbulanceId) {
+        console.log(
+          "📝 Adding assigned_ambulance_id column to ambulance_requests table...",
+        );
+        db.run(
+          "ALTER TABLE ambulance_requests ADD COLUMN assigned_ambulance_id INTEGER",
+        );
+        console.log("✅ assigned_ambulance_id column added successfully");
+      }
+    } catch (error) {
+      console.log(
+        "⚠️ assigned_ambulance_id column migration skipped:",
         error.message,
       );
     }

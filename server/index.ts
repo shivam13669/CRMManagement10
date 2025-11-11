@@ -101,6 +101,15 @@ import {
   handleUpdateHospital,
   handleAdminUpdateHospital,
 } from "./routes/hospital";
+import {
+  handleGetHospitalAmbulances,
+  handleCreateHospitalAmbulance,
+  handleUpdateHospitalAmbulance,
+  handleDeleteHospitalAmbulance,
+  handleParkAmbulance,
+  handleAssignAmbulanceToRequest,
+  handleGetAvailableAmbulances,
+} from "./routes/hospital-ambulances";
 import { initDatabase } from "./database";
 import { initializeAdmin } from "./admin-init";
 
@@ -156,6 +165,43 @@ export async function createServer() {
     "/api/admin/hospitals/:id",
     authenticateToken,
     handleAdminUpdateHospital,
+  );
+
+  // Hospital Ambulances routes
+  app.get(
+    "/api/hospital/ambulances",
+    authenticateToken,
+    handleGetHospitalAmbulances,
+  );
+  app.post(
+    "/api/hospital/ambulances",
+    authenticateToken,
+    handleCreateHospitalAmbulance,
+  );
+  app.put(
+    "/api/hospital/ambulances/:ambulanceId",
+    authenticateToken,
+    handleUpdateHospitalAmbulance,
+  );
+  app.delete(
+    "/api/hospital/ambulances/:ambulanceId",
+    authenticateToken,
+    handleDeleteHospitalAmbulance,
+  );
+  app.post(
+    "/api/hospital/ambulances/:ambulanceId/park",
+    authenticateToken,
+    handleParkAmbulance,
+  );
+  app.post(
+    "/api/hospital/ambulances/:ambulanceId/assign/:requestId",
+    authenticateToken,
+    handleAssignAmbulanceToRequest,
+  );
+  app.get(
+    "/api/hospital/ambulances/available",
+    authenticateToken,
+    handleGetAvailableAmbulances,
   );
 
   // Data routes (protected)
