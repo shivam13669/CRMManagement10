@@ -678,7 +678,9 @@ export const handleMarkAmbulanceAsRead: RequestHandler = async (req, res) => {
     const { requestId } = req.params;
 
     if (role !== "admin" && role !== "hospital") {
-      return res.status(403).json({ error: "Only admins and hospitals can mark requests as read" });
+      return res
+        .status(403)
+        .json({ error: "Only admins and hospitals can mark requests as read" });
     }
 
     db.run(
