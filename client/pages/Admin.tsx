@@ -684,50 +684,115 @@ function ManageAdmins({
                                       </div>
 
                                       <div className="flex flex-wrap gap-2 pt-4">
-                                        {/* For admins, suspend/delete are disabled with warning tooltip */}
-                                        <TooltipProvider>
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <div>
-                                                <Button
-                                                  variant="outline"
-                                                  size="sm"
-                                                  className="flex-1 sm:flex-none"
-                                                  disabled
-                                                >
-                                                  <ShieldOff className="w-4 h-4 mr-2" />
-                                                  Suspend User
-                                                </Button>
-                                              </div>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                              Suspending administrators is not
-                                              allowed
-                                            </TooltipContent>
-                                          </Tooltip>
-                                        </TooltipProvider>
+                                        {currentUser?.admin_type === "system" && user?.admin_type === "state" ? (
+                                          <>
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              className="flex-1 sm:flex-none"
+                                              onClick={async () => {
+                                                if (!selectedUser) return;
+                                                const ok = confirm(
+                                                  `Suspend admin ${selectedUser.full_name}?`,
+                                                );
+                                                if (!ok) return;
+                                                try {
+                                                  const res = await fetchWithAuth(`/api/admin/users/${selectedUser.id}/suspend`, {
+                                                    method: "POST",
+                                                    headers: { "Content-Type": "application/json" },
+                                                  });
+                                                  const json = await res.json();
+                                                  if (res.ok) {
+                                                    setAlert({ type: "success", message: "Admin suspended" });
+                                                    fetchAdmins();
+                                                  } else {
+                                                    setAlert({ type: "error", message: json.error || "Failed to suspend admin" });
+                                                  }
+                                                } catch (e) {
+                                                  setAlert({ type: "error", message: "Network error" });
+                                                }
+                                              }}
+                                            >
+                                              <ShieldOff className="w-4 h-4 mr-2" />
+                                              Suspend Admin
+                                            </Button>
 
-                                        <TooltipProvider>
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <div>
-                                                <Button
-                                                  variant="destructive"
-                                                  size="sm"
-                                                  className="flex-1 sm:flex-none"
-                                                  disabled
-                                                >
-                                                  <Trash2 className="w-4 h-4 mr-2" />
-                                                  Delete User
-                                                </Button>
-                                              </div>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                              Deleting administrators is not
-                                              allowed
-                                            </TooltipContent>
-                                          </Tooltip>
-                                        </TooltipProvider>
+                                            <Button
+                                              variant="destructive"
+                                              size="sm"
+                                              className="flex-1 sm:flex-none"
+                                              onClick={async () => {
+                                                if (!selectedUser) return;
+                                                const ok = confirm(`Delete admin ${selectedUser.full_name}? This cannot be undone.`);
+                                                if (!ok) return;
+                                                try {
+                                                  const res = await fetchWithAuth(`/api/admin/users/${selectedUser.id}`, {
+                                                    method: "DELETE",
+                                                    headers: { "Content-Type": "application/json" },
+                                                  });
+                                                  const json = await res.json();
+                                                  if (res.ok) {
+                                                    setAlert({ type: "success", message: "Admin deleted" });
+                                                    fetchAdmins();
+                                                  } else {
+                                                    setAlert({ type: "error", message: json.error || "Failed to delete admin" });
+                                                  }
+                                                } catch (e) {
+                                                  setAlert({ type: "error", message: "Network error" });
+                                                }
+                                              }}
+                                            >
+                                              <Trash2 className="w-4 h-4 mr-2" />
+                                              Delete Admin
+                                            </Button>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <TooltipProvider>
+                                              <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                  <div>
+                                                    <Button
+                                                      variant="outline"
+                                                      size="sm"
+                                                      className="flex-1 sm:flex-none"
+                                                      disabled
+                                                    >
+                                                      <ShieldOff className="w-4 h-4 mr-2" />
+                                                      Suspend User
+                                                    </Button>
+                                                  </div>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                  Suspending administrators is not
+                                                  allowed
+                                                </TooltipContent>
+                                              </Tooltip>
+                                            </TooltipProvider>
+
+                                            <TooltipProvider>
+                                              <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                  <div>
+                                                    <Button
+                                                      variant="destructive"
+                                                      size="sm"
+                                                      className="flex-1 sm:flex-none"
+                                                      disabled
+                                                    >
+                                                      <Trash2 className="w-4 h-4 mr-2" />
+                                                      Delete User
+                                                    </Button>
+                                                  </div>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                  Deleting administrators is not
+                                                  allowed
+                                                </TooltipContent>
+                                              </Tooltip>
+                                            </TooltipProvider>
+                                          </>
+                                        )}
                                       </div>
                                     </div>
                                   )}
