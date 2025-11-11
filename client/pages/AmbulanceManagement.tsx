@@ -276,7 +276,14 @@ export default function AmbulanceManagement() {
         setSelectedHospital("");
         fetchRequests();
       } else {
-        toast.error("Failed to forward request");
+        let errMsg = "Failed to forward request";
+        try {
+          const data = await response.json();
+          if (data && data.error) errMsg = data.error;
+        } catch (e) {
+          // ignore
+        }
+        toast.error(errMsg);
       }
     } catch (error) {
       console.error("Error forwarding request:", error);
