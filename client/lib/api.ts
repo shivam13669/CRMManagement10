@@ -276,7 +276,9 @@ export const authUtils = {
   },
 
   setAuthData(token: string, user: User): void {
+    // Save token under both keys for compatibility with different pages
     localStorage.setItem("authToken", token);
+    localStorage.setItem("token", token);
     localStorage.setItem("userRole", user.role);
     localStorage.setItem("userName", user.full_name);
     // if API returns admin_type or state, persist them
@@ -285,5 +287,14 @@ export const authUtils = {
       localStorage.setItem("admin_type", (user as any).admin_type);
     // @ts-ignore
     if ((user as any).state) localStorage.setItem("state", (user as any).state);
+  },
+  logout(): void {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("token");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("userName");
+    localStorage.removeItem("admin_type");
+    localStorage.removeItem("state");
+    window.location.href = "/login";
   },
 };
