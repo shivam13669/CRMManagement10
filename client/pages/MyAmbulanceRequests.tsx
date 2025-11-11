@@ -40,6 +40,11 @@ interface AmbulanceRequest {
   hospital_response?: string;
   hospital_response_notes?: string;
   hospital_response_date?: string;
+  assigned_ambulance_id?: number;
+  ambulance_registration?: string;
+  ambulance_type?: string;
+  ambulance_driver_name?: string;
+  ambulance_driver_phone?: string;
   created_at: string;
   assigned_staff_name: string;
   assigned_staff_phone?: string;
