@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Layout } from "../components/Layout";
 import { StateAdminLayout } from "../components/StateAdminLayout";
 import { authUtils } from "../lib/api";
+import { fetchWithAuth } from "../lib/fetchWithAuth";
 import {
   Truck,
   Clock,
