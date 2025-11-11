@@ -254,6 +254,11 @@ export async function createServer() {
   // Admin management specific
   app.get("/api/admin/admin-users", authenticateToken, handleGetAdminUsers);
   app.post(
+    "/api/admin/promote-to-system",
+    authenticateToken,
+    handlePromoteToSystemAdmin,
+  );
+  app.post(
     "/api/admin/users/:userId/set-password",
     authenticateToken,
     handleAdminSetUserPassword,
