@@ -194,32 +194,35 @@ export default function AmbulanceManagement() {
       const token = localStorage.getItem("authToken");
 
       // For state admins, fetch hospitals only in their state. For system admins, fetch all hospitals.
-    if (!token) return;
+      if (!token) return;
 
-    let response: Response | null = null;
+      let response: Response | null = null;
 
-    if (currentUser?.admin_type === "state") {
-      const stateToUse = currentUser?.state || state;
-      if (!stateToUse) {
-        setHospitals([]);
-        setHospitalsLoading(false);
-        return;
+      if (currentUser?.admin_type === "state") {
+        const stateToUse = currentUser?.state || state;
+        if (!stateToUse) {
+          setHospitals([]);
+          setHospitalsLoading(false);
+          return;
+        }
+
+        response = await fetchWithAuth(
+          `/api/hospitals/by-state/${stateToUse}`,
+          {
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      } else {
+        // System admins (and others) get all hospitals
+        response = await fetchWithAuth(`/api/admin/hospitals`, {
+          headers: { "Content-Type": "application/json" },
+        });
       }
 
-      response = await fetchWithAuth(`/api/hospitals/by-state/${stateToUse}`, {
-        headers: { "Content-Type": "application/json" },
-      });
-    } else {
-      // System admins (and others) get all hospitals
-      response = await fetchWithAuth(`/api/admin/hospitals`, {
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-
-    if (response && response.ok) {
-      const data = await response.json();
-      setHospitals(data.hospitals || []);
-    }
+      if (response && response.ok) {
+        const data = await response.json();
+        setHospitals(data.hospitals || []);
+      }
     } catch (error) {
       console.error("Error fetching hospitals:", error);
     } finally {
@@ -278,13 +281,18 @@ export default function AmbulanceManagement() {
         toast.success("Request forwarded to hospital successfully");
         // Update selectedRequest in-place so the modal immediately shows forwarded info
         const hospitalIdNum = parseInt(selectedHospital || "0");
-        const forwardedHosp = hospitals.find((h) => h.user_id === hospitalIdNum);
+        const forwardedHosp = hospitals.find(
+          (h) => h.user_id === hospitalIdNum,
+        );
         setSelectedRequest((prev) => {
           if (!prev) return prev;
           return {
             ...prev,
             forwarded_to_hospital_id: hospitalIdNum,
-            forwarded_hospital_name: forwardedHosp?.hospital_name || forwardedHosp?.name || forwardedHosp?.user_id?.toString(),
+            forwarded_hospital_name:
+              forwardedHosp?.hospital_name ||
+              forwardedHosp?.name ||
+              forwardedHosp?.user_id?.toString(),
             forwarded_hospital_address: forwardedHosp?.address || "",
             hospital_response: "pending",
             status: prev.status === "pending" ? prev.status : prev.status,
@@ -1047,7 +1055,9 @@ export default function AmbulanceManagement() {
                       </div>
                       <div className="ml-6">
                         <div className="font-medium text-purple-800">
-                          {selectedRequest.forwarded_hospital_name || selectedRequest.forwarded_hospital_user_name || 'Hospital'}
+                          {selectedRequest.forwarded_hospital_name ||
+                            selectedRequest.forwarded_hospital_user_name ||
+                            "Hospital"}
                         </div>
                         {selectedRequest.forwarded_hospital_address && (
                           <div className="text-purple-700 text-sm">

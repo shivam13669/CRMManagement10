@@ -112,7 +112,10 @@ export const handleGetNotifications: RequestHandler = async (req, res) => {
         }
 
         // Sort and return
-        notifications.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        notifications.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        );
         const limitedNotifications = notifications.slice(0, 20);
         return res.json({
           notifications: limitedNotifications,
@@ -121,7 +124,11 @@ export const handleGetNotifications: RequestHandler = async (req, res) => {
         });
       } catch (err) {
         console.error("Error fetching hospital notifications:", err);
-        return res.status(500).json({ error: "Internal server error while fetching notifications" });
+        return res
+          .status(500)
+          .json({
+            error: "Internal server error while fetching notifications",
+          });
       }
     }
 

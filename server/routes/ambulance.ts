@@ -56,11 +56,15 @@ export const handleCreateAmbulanceRequest: RequestHandler = async (
     if (pickup_address && latLngRegex.test(pickup_address)) {
       // If pickup_address is coordinates, reverse geocode using Nominatim
       try {
-        const [lat, lng] = pickup_address.split(",").map((v: string) => v.trim());
+        const [lat, lng] = pickup_address
+          .split(",")
+          .map((v: string) => v.trim());
         const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(
           lat,
         )}&lon=${encodeURIComponent(lng)}&addressdetails=1`;
-        const res = await fetch(url, { headers: { "User-Agent": "Healthcare-App/1.0" } });
+        const res = await fetch(url, {
+          headers: { "User-Agent": "Healthcare-App/1.0" },
+        });
         if (res.ok) {
           const data = await res.json();
           const display = data.display_name || "";
@@ -131,7 +135,7 @@ export const handleCreateAmbulanceRequest: RequestHandler = async (
           `,
           [
             adminId,
-            `Ambulance request received${customerState ? ` - ${customerState}` : ''}`,
+            `Ambulance request received${customerState ? ` - ${customerState}` : ""}`,
             requestId,
           ],
         );
@@ -597,8 +601,11 @@ export const handleForwardToHospital: RequestHandler = async (req, res) => {
         [hospital_user_id, requestId],
       );
     } catch (err) {
-      console.error('Failed to update ambulance request forwarded fields:', err && err.message);
-      return res.status(500).json({ error: 'Failed to forward request' });
+      console.error(
+        "Failed to update ambulance request forwarded fields:",
+        err && err.message,
+      );
+      return res.status(500).json({ error: "Failed to forward request" });
     }
 
     // Try to set status to forwarded if schema supports it (best effort)
@@ -612,7 +619,10 @@ export const handleForwardToHospital: RequestHandler = async (req, res) => {
         [requestId],
       );
     } catch (statusErr) {
-      console.warn('Could not set status to forwarded (probably older schema), continuing without changing status:', statusErr && statusErr.message);
+      console.warn(
+        "Could not set status to forwarded (probably older schema), continuing without changing status:",
+        statusErr && statusErr.message,
+      );
     }
 
     // Create notification for hospital

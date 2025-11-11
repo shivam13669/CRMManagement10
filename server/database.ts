@@ -535,7 +535,9 @@ async function runMigrations(): Promise<void> {
         );
         const createSql = tableSqlRes[0]?.values[0][0] || "";
         if (createSql && !createSql.includes("forwarded_to_hospital")) {
-          console.log("🛠️ Updating ambulance_requests status CHECK to include forwarded statuses...");
+          console.log(
+            "🛠️ Updating ambulance_requests status CHECK to include forwarded statuses...",
+          );
 
           // Recreate table with new schema including additional statuses
           db.run("BEGIN TRANSACTION");
@@ -567,28 +569,54 @@ async function runMigrations(): Promise<void> {
 
           // Copy existing columns that exist into the new table
           const existingInfo = db.exec("PRAGMA table_info(ambulance_requests)");
-          const existingCols = (existingInfo[0]?.values || []).map((r: any) => r[1]);
+          const existingCols = (existingInfo[0]?.values || []).map(
+            (r: any) => r[1],
+          );
 
           const colsToCopy = [
-            'id','customer_user_id','pickup_address','destination_address','emergency_type','customer_condition','contact_number','status','priority','assigned_staff_id','notes','is_read','forwarded_to_hospital_id','hospital_response','hospital_response_notes','hospital_response_date','customer_state','customer_district','created_at','updated_at'
+            "id",
+            "customer_user_id",
+            "pickup_address",
+            "destination_address",
+            "emergency_type",
+            "customer_condition",
+            "contact_number",
+            "status",
+            "priority",
+            "assigned_staff_id",
+            "notes",
+            "is_read",
+            "forwarded_to_hospital_id",
+            "hospital_response",
+            "hospital_response_notes",
+            "hospital_response_date",
+            "customer_state",
+            "customer_district",
+            "created_at",
+            "updated_at",
           ].filter((c) => existingCols.includes(c));
 
           if (colsToCopy.length > 0) {
             db.run(`
-              INSERT INTO ambulance_requests_new (${colsToCopy.join(',')})
-              SELECT ${colsToCopy.join(',')} FROM ambulance_requests;
+              INSERT INTO ambulance_requests_new (${colsToCopy.join(",")})
+              SELECT ${colsToCopy.join(",")} FROM ambulance_requests;
             `);
           }
 
           db.run("DROP TABLE ambulance_requests");
-          db.run("ALTER TABLE ambulance_requests_new RENAME TO ambulance_requests");
+          db.run(
+            "ALTER TABLE ambulance_requests_new RENAME TO ambulance_requests",
+          );
 
           db.run("COMMIT");
 
           console.log("✅ ambulance_requests table updated successfully");
         }
       } catch (innerErr) {
-        console.log("⚠️ Could not update ambulance_requests status CHECK:", innerErr.message);
+        console.log(
+          "⚠️ Could not update ambulance_requests status CHECK:",
+          innerErr.message,
+        );
       }
     } catch (error) {
       console.log(

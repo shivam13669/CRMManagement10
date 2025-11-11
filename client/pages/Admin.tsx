@@ -675,13 +675,18 @@ function ManageAdmins({
                                             {selectedUser.state && (
                                               <div className="flex items-center space-x-2">
                                                 <MapPin className="w-4 h-4 text-gray-400" />
-                                                <span>State: {selectedUser.state}</span>
+                                                <span>
+                                                  State: {selectedUser.state}
+                                                </span>
                                               </div>
                                             )}
                                             {selectedUser.district && (
                                               <div className="flex items-center space-x-2">
                                                 <MapPin className="w-4 h-4 text-gray-400" />
-                                                <span>District: {selectedUser.district}</span>
+                                                <span>
+                                                  District:{" "}
+                                                  {selectedUser.district}
+                                                </span>
                                               </div>
                                             )}
                                           </div>
