@@ -81,6 +81,12 @@ export default function HospitalServiceRequests() {
   );
   const [responseNotes, setResponseNotes] = useState("");
   const [submittingResponse, setSubmittingResponse] = useState(false);
+  const [availableAmbulances, setAvailableAmbulances] = useState<any[]>([]);
+  const [selectedAmbulance, setSelectedAmbulance] = useState<number | null>(
+    null,
+  );
+  const [ambulanceSelectionOpen, setAmbulanceSelectionOpen] = useState(false);
+  const [loadingAmbulances, setLoadingAmbulances] = useState(false);
 
   const fetchRequests = async (showRefreshing = false) => {
     try {
