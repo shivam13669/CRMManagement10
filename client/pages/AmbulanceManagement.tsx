@@ -189,25 +189,33 @@ export default function AmbulanceManagement() {
       setHospitalsLoading(true);
       const token = localStorage.getItem("authToken");
 
-      // For state admins, use their assigned state; otherwise use the provided state
-      const stateToUse =
-        currentUser?.admin_type === "state" ? currentUser?.state : state;
+      // For state admins, fetch hospitals only in their state. For system admins, fetch all hospitals.
+    if (!token) return;
 
-      if (!token || !stateToUse) return;
+    let response: Response | null = null;
 
-      const response = await fetchWithAuth(
-        `/api/hospitals/by-state/${stateToUse}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        setHospitals(data.hospitals || []);
+    if (currentUser?.admin_type === "state") {
+      const stateToUse = currentUser?.state || state;
+      if (!stateToUse) {
+        setHospitals([]);
+        setHospitalsLoading(false);
+        return;
       }
+
+      response = await fetchWithAuth(`/api/hospitals/by-state/${stateToUse}`, {
+        headers: { "Content-Type": "application/json" },
+      });
+    } else {
+      // System admins (and others) get all hospitals
+      response = await fetchWithAuth(`/api/admin/hospitals`, {
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (response && response.ok) {
+      const data = await response.json();
+      setHospitals(data.hospitals || []);
+    }
     } catch (error) {
       console.error("Error fetching hospitals:", error);
     } finally {
