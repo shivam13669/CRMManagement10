@@ -137,16 +137,13 @@ export default function HospitalServiceRequests() {
       const token = localStorage.getItem("authToken");
       if (!token) return;
 
-      const response = await fetch(
-        `/api/ambulance/${requestId}/mark-read`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+      const response = await fetch(`/api/ambulance/${requestId}/mark-read`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-      );
+      });
 
       if (response.ok) {
         setRequests((prev) =>

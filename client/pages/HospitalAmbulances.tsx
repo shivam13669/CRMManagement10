@@ -780,10 +780,7 @@ export default function HospitalAmbulances() {
               >
                 Cancel
               </Button>
-              <Button
-                onClick={handleCreateAmbulance}
-                disabled={submitting}
-              >
+              <Button onClick={handleCreateAmbulance} disabled={submitting}>
                 {submitting ? "Creating..." : "Create Ambulance"}
               </Button>
             </div>
@@ -978,10 +975,7 @@ export default function HospitalAmbulances() {
               >
                 Cancel
               </Button>
-              <Button
-                onClick={handleUpdateAmbulance}
-                disabled={submitting}
-              >
+              <Button onClick={handleUpdateAmbulance} disabled={submitting}>
                 {submitting ? "Updating..." : "Update Ambulance"}
               </Button>
             </div>
