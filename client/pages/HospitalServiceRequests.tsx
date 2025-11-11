@@ -767,9 +767,10 @@ export default function HospitalServiceRequests() {
                   {selectedRequest.hospital_response === "pending" && (
                     <div className="space-y-3">
                       <Button
-                        onClick={() => {
+                        onClick={async () => {
                           setResponseType("accepted");
-                          setResponseModalOpen(true);
+                          await fetchAvailableAmbulances();
+                          setAmbulanceSelectionOpen(true);
                         }}
                         className="w-full gap-2 bg-green-600 hover:bg-green-700"
                       >
