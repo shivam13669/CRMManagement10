@@ -36,7 +36,7 @@ interface SidebarItem {
   adminOnly?: boolean;
 }
 
-const sidebarItems: SidebarItem[] = [
+export const sidebarItems: SidebarItem[] = [
   { icon: Activity, label: "Dashboard", path: "/admin-dashboard" },
   { icon: Layers, label: "Admin Management", path: "/admin", adminOnly: true },
   { icon: Users, label: "Customers", path: "/customers" },
