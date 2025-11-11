@@ -57,6 +57,7 @@ import {
 } from "../components/ui/popover";
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { authUtils } from "../lib/api";
+import { fetchWithAuth } from "../lib/fetchWithAuth";
 import {
   Users,
   UserCheck,
