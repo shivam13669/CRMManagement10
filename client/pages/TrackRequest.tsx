@@ -52,6 +52,7 @@ export default function TrackRequest() {
   const [requests, setRequests] = useState<AmbulanceRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<AmbulanceRequest | null>(null);
 
   const fetchRequests = async (showRefreshing = false) => {
     try {
